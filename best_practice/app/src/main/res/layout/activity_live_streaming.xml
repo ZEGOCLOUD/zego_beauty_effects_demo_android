@@ -180,6 +180,16 @@
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent" />
 
+  <com.zegocloud.demo.bestpractice.components.BeautyButton
+    android:id="@+id/preview_beauty"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:visibility="gone"
+    app:layout_constraintBottom_toBottomOf="@id/preview_start"
+    app:layout_constraintEnd_toStartOf="@id/preview_start"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="@id/preview_start" />
+
   <com.zegocloud.demo.bestpractice.components.message.barrage.BarrageMessageView
     android:id="@+id/live_message_view"
     android:layout_width="270dp"

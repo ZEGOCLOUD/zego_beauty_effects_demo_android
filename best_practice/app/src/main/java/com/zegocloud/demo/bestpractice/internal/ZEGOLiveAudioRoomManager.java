@@ -30,9 +30,10 @@ public class ZEGOLiveAudioRoomManager {
         private static final ZEGOLiveAudioRoomManager INSTANCE = new ZEGOLiveAudioRoomManager();
     }
 
-    private ZEGOLiveAudioRoomManager(){
+    private ZEGOLiveAudioRoomManager() {
 
     }
+
     public static ZEGOLiveAudioRoomManager getInstance() {
         return Holder.INSTANCE;
     }

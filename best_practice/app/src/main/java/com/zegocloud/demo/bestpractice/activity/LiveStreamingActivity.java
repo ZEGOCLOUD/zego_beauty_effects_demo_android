@@ -23,9 +23,11 @@ import com.zegocloud.demo.bestpractice.internal.business.pk.PKService.PKInfo;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKCallBack;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
+import com.zegocloud.demo.bestpractice.internal.sdk.components.effect.BeautyDialog;
 import com.zegocloud.demo.bestpractice.internal.sdk.express.ExpressService;
 import com.zegocloud.demo.bestpractice.internal.sdk.express.IExpressEngineEventHandler;
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.IZIMEventHandler;
+import com.zegocloud.demo.bestpractice.internal.sdk.zim.RoomRequest;
 import com.zegocloud.demo.bestpractice.internal.utils.ToastUtil;
 import im.zego.zegoexpress.callback.IZegoMixerStartCallback;
 import im.zego.zegoexpress.callback.IZegoRoomLoginCallback;
@@ -53,6 +55,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
     //    private AlertDialog inviteCoHostDialog;
     private AlertDialog zimReconnectDialog;
     private AlertDialog startPKDialog;
+    private BeautyDialog beautyDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,11 +78,27 @@ public class LiveStreamingActivity extends AppCompatActivity {
             loginRoom();
         });
 
+        binding.previewBeauty.setOnClickListener(v -> {
+            if (beautyDialog == null) {
+                beautyDialog = new BeautyDialog(LiveStreamingActivity.this);
+            }
+            beautyDialog.show();
+        });
+        binding.liveBottomMenuBar.setBeautyButtonClickListener(v -> {
+            if (beautyDialog == null) {
+                beautyDialog = new BeautyDialog(LiveStreamingActivity.this);
+            }
+            beautyDialog.show();
+        });
+
         if (isHost) {
             // join when click start
             ZEGOSDKManager.getInstance().expressService.openCamera(true);
             ZEGOSDKManager.getInstance().expressService.openMicrophone(true);
             binding.previewStart.setVisibility(View.VISIBLE);
+            if (ZEGOSDKManager.getInstance().effectsService.isEffectSDKInit()) {
+                binding.previewBeauty.setVisibility(View.VISIBLE);
+            }
             binding.mainHostVideo.startPreviewOnly();
 
             ZEGOSDKUser currentUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
@@ -112,6 +131,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
 
     private void onJoinRoomSuccess() {
         binding.previewStart.setVisibility(View.GONE);
+        binding.previewBeauty.setVisibility(View.GONE);
         binding.liveBottomMenuBar.setVisibility(View.VISIBLE);
 
         boolean isHost = getIntent().getBooleanExtra("host", true);

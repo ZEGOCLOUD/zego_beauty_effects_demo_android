@@ -30,7 +30,7 @@ public class ZEGOCallInvitationManager {
         private static final ZEGOCallInvitationManager INSTANCE = new ZEGOCallInvitationManager();
     }
 
-    private ZEGOCallInvitationManager(){
+    private ZEGOCallInvitationManager() {
 
     }
 

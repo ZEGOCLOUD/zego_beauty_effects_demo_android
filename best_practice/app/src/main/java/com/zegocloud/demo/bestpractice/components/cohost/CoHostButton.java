@@ -11,7 +11,6 @@ import com.zegocloud.demo.bestpractice.R;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager.LiveStreamingListener;
 import com.zegocloud.demo.bestpractice.internal.business.RoomRequestExtendedData;
-import com.zegocloud.demo.bestpractice.internal.business.RoomRequestType;
 import com.zegocloud.demo.bestpractice.internal.business.cohost.CoHostService.Role;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
@@ -19,9 +18,12 @@ import com.zegocloud.demo.bestpractice.internal.sdk.components.express.ZTextButt
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.IZIMEventHandler;
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.RoomRequest;
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.RoomRequestCallback;
+import com.zegocloud.demo.bestpractice.internal.business.RoomRequestType;
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.ZIMService;
 import com.zegocloud.demo.bestpractice.internal.utils.Utils;
 import java.util.Objects;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class CoHostButton extends ZTextButton {
 

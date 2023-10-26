@@ -10,6 +10,7 @@ import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import androidx.annotation.Nullable;
 import com.zegocloud.demo.bestpractice.R;
+import com.zegocloud.demo.bestpractice.components.BeautyButton;
 import com.zegocloud.demo.bestpractice.components.RoomRequestListDialog;
 import com.zegocloud.demo.bestpractice.components.message.barrage.BottomInputDialog;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
@@ -36,6 +37,8 @@ public class BottomMenuBar extends LinearLayout {
     private SwitchCameraButton switchCameraButton;
     private PKButton pkButton;
     private RoomRequestListDialog roomRequestListDialog;
+    private View.OnClickListener beautyButtonClickListener;
+    private BeautyButton beautyBtn;
 
     public BottomMenuBar(Context context) {
         super(context);
@@ -80,6 +83,15 @@ public class BottomMenuBar extends LinearLayout {
         addView(childLinearLayout, params);
         int paddingEnd = Utils.dp2px(8, getResources().getDisplayMetrics());
         childLinearLayout.setPadding(0, 0, paddingEnd, 0);
+
+        beautyBtn = new BeautyButton(getContext());
+        beautyBtn.setVisibility(GONE);
+        beautyBtn.setOnClickListener(v -> {
+            if (beautyButtonClickListener != null) {
+                beautyButtonClickListener.onClick(v);
+            }
+        });
+        childLinearLayout.addView(beautyBtn, generateChildImageLayoutParams());
 
         pkButton = new PKButton(getContext());
         childLinearLayout.addView(pkButton, generateChildTextLayoutParams());
@@ -201,6 +213,8 @@ public class BottomMenuBar extends LinearLayout {
             microphoneButton.setVisibility(GONE);
             switchCameraButton.setVisibility(GONE);
 
+            beautyBtn.setVisibility(GONE);
+
         } else if (role == Role.CO_HOST) {
             coHostButton.setVisibility(VISIBLE);
             pkButton.setVisibility(GONE);
@@ -210,6 +224,9 @@ public class BottomMenuBar extends LinearLayout {
             microphoneButton.setVisibility(VISIBLE);
             switchCameraButton.setVisibility(VISIBLE);
 
+            if (ZEGOSDKManager.getInstance().effectsService.isEffectSDKInit()) {
+                beautyBtn.setVisibility(VISIBLE);
+            }
         } else if (role == Role.HOST) {
             coHostButton.setVisibility(GONE);
             pkButton.setVisibility(VISIBLE);
@@ -218,6 +235,10 @@ public class BottomMenuBar extends LinearLayout {
             cameraButton.setVisibility(VISIBLE);
             microphoneButton.setVisibility(VISIBLE);
             switchCameraButton.setVisibility(VISIBLE);
+
+            if (ZEGOSDKManager.getInstance().effectsService.isEffectSDKInit()) {
+                beautyBtn.setVisibility(VISIBLE);
+            }
         }
 
         PKInfo pkInfo = ZEGOLiveStreamingManager.getInstance().getPKInfo();
@@ -225,5 +246,9 @@ public class BottomMenuBar extends LinearLayout {
             coHostButton.setVisibility(GONE);
             coHostListButton.setVisibility(GONE);
         }
+    }
+
+    public void setBeautyButtonClickListener(OnClickListener beautyButtonClickListener) {
+        this.beautyButtonClickListener = beautyButtonClickListener;
     }
 }

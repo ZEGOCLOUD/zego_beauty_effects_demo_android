@@ -1,15 +1,26 @@
 package com.zegocloud.demo.bestpractice.internal.sdk;
 
 import android.app.Application;
+import android.content.Context;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.MergeCallBack;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKCallBack;
+import com.zegocloud.demo.bestpractice.internal.sdk.effect.ZegoEffectsService;
+import com.zegocloud.demo.bestpractice.internal.sdk.effect.net.IGetLicenseCallback;
+import com.zegocloud.demo.bestpractice.internal.sdk.effect.net.License;
 import com.zegocloud.demo.bestpractice.internal.sdk.express.ExpressService;
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.ZIMService;
 import com.zegocloud.demo.bestpractice.internal.utils.LogUtil;
+import im.zego.effects.entity.ZegoEffectsVideoFrameParam;
+import im.zego.effects.enums.ZegoEffectsVideoFrameFormat;
+import im.zego.zegoexpress.callback.IZegoCustomVideoProcessHandler;
 import im.zego.zegoexpress.callback.IZegoRoomLoginCallback;
 import im.zego.zegoexpress.callback.IZegoRoomLogoutCallback;
 import im.zego.zegoexpress.callback.IZegoUploadLogResultCallback;
+import im.zego.zegoexpress.constants.ZegoPublishChannel;
 import im.zego.zegoexpress.constants.ZegoScenario;
+import im.zego.zegoexpress.constants.ZegoVideoBufferType;
+import im.zego.zegoexpress.entity.ZegoCustomVideoProcessConfig;
+import im.zego.zegoexpress.entity.ZegoVideoConfig;
 import im.zego.zim.callback.ZIMLogUploadedCallback;
 import im.zego.zim.callback.ZIMLoggedInCallback;
 import im.zego.zim.callback.ZIMRoomEnteredCallback;
@@ -23,14 +34,18 @@ public class ZEGOSDKManager {
 
     public ExpressService expressService = new ExpressService();
     public ZIMService zimService = new ZIMService();
+    public ZegoEffectsService effectsService = new ZegoEffectsService();
+    private Context context;
+    private long appID;
+    private String appSign;
+
+    private ZEGOSDKManager() {
+
+    }
 
     private static final class Holder {
 
         private static final ZEGOSDKManager INSTANCE = new ZEGOSDKManager();
-    }
-
-    private ZEGOSDKManager(){
-
     }
 
     public static ZEGOSDKManager getInstance() {
@@ -44,6 +59,74 @@ public class ZEGOSDKManager {
     public void initSDK(Application application, long appID, String appSign, ZegoScenario scenario) {
         expressService.initSDK(application, appID, appSign, scenario);
         zimService.initSDK(application, appID, appSign);
+        context = application.getApplicationContext();
+        this.appID = appID;
+        this.appSign = appSign;
+    }
+
+    public void enableZEGOEffects(boolean enable) {
+        if (enable) {
+            effectsService.init(context, appID, appSign, new IGetLicenseCallback() {
+                @Override
+                public void onGetLicense(int code, String message, License license) {
+                    LogUtil.d(
+                        "onGetLicense() called with: code = [" + code + "], message = [" + message + "], license = ["
+                            + license + "]");
+                    enableCustomVideoProcess(code == 0);
+                }
+            });
+        } else {
+            enableCustomVideoProcess(false);
+        }
+    }
+
+    private void enableCustomVideoProcess(boolean enable) {
+        if (enable) {
+            ZegoCustomVideoProcessConfig config = new ZegoCustomVideoProcessConfig();
+            config.bufferType = ZegoVideoBufferType.GL_TEXTURE_2D;
+
+            expressService.enableCustomVideoProcessing(true, config, ZegoPublishChannel.MAIN);
+            expressService.setCustomVideoProcessHandler(new IZegoCustomVideoProcessHandler() {
+                @Override
+                public void onStart(ZegoPublishChannel channel) {
+                    LogUtil.d("[Express] [onStart]");
+                    effectsService.uninitEnv();
+                    ZegoVideoConfig videoConfig = expressService.getVideoConfig();
+                    effectsService.initEnv(videoConfig.captureWidth, videoConfig.captureHeight);
+
+                }
+
+                @Override
+                public void onStop(ZegoPublishChannel channel) {
+                    LogUtil.d("[Express] [onStop]");
+                    effectsService.uninitEnv();
+                }
+
+                @Override
+                public void onCapturedUnprocessedTextureData(int textureID, int width, int height,
+                    long referenceTimeMillisecond, ZegoPublishChannel channel) {
+                    //                Log.i("ZEGO",
+                    //                    "[Express] [onCapturedUnprocessedTextureData] textureID: " + textureID + ", width: " + width
+                    //                        + ", height: " + height + ", ts: " + referenceTimeMillisecond);
+                    // Receive texture from ZegoExpressEngine
+
+                    ZegoEffectsVideoFrameParam effectsVideoFrameParam = new ZegoEffectsVideoFrameParam();
+                    effectsVideoFrameParam.format = ZegoEffectsVideoFrameFormat.RGBA32;
+                    effectsVideoFrameParam.width = width;
+                    effectsVideoFrameParam.height = height;
+
+                    // Process buffer by ZegoEffects
+                    int processedTextureID = effectsService.processTexture(textureID, effectsVideoFrameParam);
+
+                    // Send processed texture to ZegoExpressEngine
+                    expressService.sendCustomVideoProcessedTextureData(processedTextureID, width, height,
+                        referenceTimeMillisecond);
+                }
+            });
+        } else {
+            expressService.enableCustomVideoProcessing(true, null, ZegoPublishChannel.MAIN);
+        }
+
     }
 
     public void connectUser(String userID, String userName, ZEGOSDKCallBack callback) {
@@ -154,6 +237,7 @@ public class ZEGOSDKManager {
                 mergeCallBack.setResult2(errorInfo);
             }
         });
+        effectsService.resetAndDisableAllAbilities();
     }
 
     public void uploadLog(ZEGOSDKCallBack callBack) {

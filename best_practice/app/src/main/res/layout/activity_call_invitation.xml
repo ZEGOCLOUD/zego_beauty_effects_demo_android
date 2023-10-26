@@ -55,9 +55,18 @@
     android:layout_marginBottom="36dp"
     android:background="@drawable/call_icon_camera_on"
     app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toStartOf="@+id/call_hangup_btn"
+    app:layout_constraintEnd_toStartOf="@+id/call_beauty_btn"
     app:layout_constraintHorizontal_bias="0.5"
     app:layout_constraintStart_toEndOf="@+id/call_camera_switch_btn" />
+
+  <com.zegocloud.demo.bestpractice.components.BeautyButton
+    android:id="@+id/call_beauty_btn"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:layout_marginBottom="36dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toStartOf="@id/call_hangup_btn"
+    app:layout_constraintStart_toEndOf="@id/call_camera_btn" />
 
   <ImageView
     android:id="@+id/call_hangup_btn"
@@ -68,7 +77,7 @@
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toStartOf="@+id/call_mic_btn"
     app:layout_constraintHorizontal_bias="0.5"
-    app:layout_constraintStart_toEndOf="@+id/call_camera_btn" />
+    app:layout_constraintStart_toEndOf="@+id/call_beauty_btn" />
 
   <com.zegocloud.demo.bestpractice.internal.sdk.components.express.ToggleMicrophoneButton
     android:id="@+id/call_mic_btn"

@@ -65,6 +65,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void initZEGOSDK() {
         ZEGOSDKManager.getInstance().initSDK(getApplication(), ZEGOSDKKeyCenter.appID, ZEGOSDKKeyCenter.appSign);
+        ZEGOSDKManager.getInstance().enableZEGOEffects(true);
     }
 
     private void signInZEGOSDK(String userID, String userName, ZEGOSDKCallBack callback) {

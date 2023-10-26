@@ -17,7 +17,7 @@ public class RoomRequestExtendedData {
                     RoomRequestExtendedData data = new RoomRequestExtendedData();
                     data.roomRequestType = RoomRequestType.REQUEST_COHOST;
                     return data;
-                }else if (type == RoomRequestType.REQUEST_TAKE_SEAT) {
+                } else if (type == RoomRequestType.REQUEST_TAKE_SEAT) {
                     RoomRequestExtendedData data = new RoomRequestExtendedData();
                     data.roomRequestType = RoomRequestType.REQUEST_TAKE_SEAT;
                     return data;

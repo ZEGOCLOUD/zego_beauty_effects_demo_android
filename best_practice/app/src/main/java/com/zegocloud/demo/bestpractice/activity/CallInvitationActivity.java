@@ -19,6 +19,7 @@ import com.zegocloud.demo.bestpractice.internal.ZEGOCallInvitationManager;
 import com.zegocloud.demo.bestpractice.internal.business.call.FullCallInfo;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
+import com.zegocloud.demo.bestpractice.internal.sdk.components.effect.BeautyDialog;
 import com.zegocloud.demo.bestpractice.internal.sdk.express.IExpressEngineEventHandler;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +31,7 @@ public class CallInvitationActivity extends AppCompatActivity {
 
     private ActivityCallInvitationBinding binding;
     private FullCallInfo callInfo;
+    private BeautyDialog beautyDialog;
 
     public static void startActivity(Context context, FullCallInfo callInfo) {
         Intent intent = new Intent(context, CallInvitationActivity.class);
@@ -52,10 +54,16 @@ public class CallInvitationActivity extends AppCompatActivity {
         if (callInfo.isVideoCall()) {
             binding.callCameraBtn.open();
             binding.callCameraBtn.setVisibility(View.VISIBLE);
+            if (ZEGOSDKManager.getInstance().effectsService.isEffectSDKInit()) {
+                binding.callBeautyBtn.setVisibility(View.VISIBLE);
+            } else {
+                binding.callBeautyBtn.setVisibility(View.GONE);
+            }
             binding.callCameraSwitchBtn.setVisibility(View.VISIBLE);
         } else {
             binding.callCameraBtn.close();
             binding.callCameraBtn.setVisibility(View.GONE);
+            binding.callBeautyBtn.setVisibility(View.GONE);
             binding.callCameraSwitchBtn.setVisibility(View.GONE);
         }
 
@@ -127,6 +135,13 @@ public class CallInvitationActivity extends AppCompatActivity {
             otherVideoViewParent.removeView(binding.otherVideoView);
             selfVideoViewParent.addView(binding.otherVideoView);
             otherVideoViewParent.addView(binding.selfVideoView);
+        });
+
+        binding.callBeautyBtn.setOnClickListener(v -> {
+            if (beautyDialog == null) {
+                beautyDialog = new BeautyDialog(this);
+            }
+            beautyDialog.show();
         });
     }
 
