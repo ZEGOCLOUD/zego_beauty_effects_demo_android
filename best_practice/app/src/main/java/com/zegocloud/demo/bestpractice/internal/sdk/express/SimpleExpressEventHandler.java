@@ -176,10 +176,10 @@ class SimpleExpressEventHandler extends IZegoEventHandler {
     }
 
     @Override
-    public void onPublisherSendAudioFirstFrame() {
-        super.onPublisherSendAudioFirstFrame();
+    public void onPublisherSendAudioFirstFrame(ZegoPublishChannel channel) {
+        super.onPublisherSendAudioFirstFrame(channel);
         for (IZegoEventHandler handler : handlerList) {
-            handler.onPublisherSendAudioFirstFrame();
+            handler.onPublisherSendAudioFirstFrame(channel);
         }
     }
 
