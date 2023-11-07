@@ -11,19 +11,19 @@ Before you begin, make sure you complete the following:
 ### Open The Project With Android Studio
 
 if you open the project and get this error:
-<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/AS_1.jpg">
+<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/AS_1.jpg?raw=true">
 
 you can fix it as follow:
 
 
 open your Android Studio Settings,modify your Gradle JDK to java 11:
-<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/AS_2.jpg">
+<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/AS_2.jpg?raw=true">
 
 ### Input AppID and AppSign
 
 input your ZEGO appID and appSign in class `com.zegocloud.demo.bestpractice.ZEGOSDKKeyCenter.java`
 
-<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/demo1.jpg">
+<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/demo1.jpg?raw=true">
 
 
 
@@ -31,7 +31,7 @@ input your ZEGO appID and appSign in class `com.zegocloud.demo.bestpractice.ZEGO
 
 When you activate the Effects SDK,you have to provide your package name,now replace the application with the package name you provided;
 
-<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/demo2.jpg">
+<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/demo2.jpg?raw=true">
 
 After that,you can build and run the demo project.
 
@@ -60,10 +60,10 @@ If you don't need a certain feature, you can remove it as follows:
 
 1. remove the corresponding `BeautyGroup` type in the `beautyGroups` of `com.zegocloud.demo.bestpractice.internal.sdk.effect.ZegoEffectsService.java` file.
 
-<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/demo3.jpg">
+<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/demo3.jpg?raw=true">
 
 2. After you removed the specific beauty features, you can also delete their beauty resources. The beauty resources is in the `assets` folder of the project:
-<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/demo4.jpg">
+<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/master/best_practice/pngs/demo4.jpg?raw=true">
 ,As follow:
 
 #### Basic
