@@ -29,6 +29,7 @@ import com.zegocloud.demo.bestpractice.internal.sdk.zim.IZIMEventHandler;
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.RoomRequest;
 import com.zegocloud.demo.bestpractice.internal.utils.ToastUtil;
 import im.zego.zegoexpress.callback.IZegoMixerStartCallback;
+import com.zegocloud.demo.bestpractice.internal.utils.ToastUtil;
 import im.zego.zegoexpress.callback.IZegoRoomLoginCallback;
 import im.zego.zegoexpress.constants.ZegoPublisherState;
 import im.zego.zegoexpress.constants.ZegoRoomStateChangedReason;
@@ -116,7 +117,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
             @Override
             public void onResult(int errorCode, String message) {
                 if (errorCode != 0) {
-                    onJoinRoomFailed();
+                    onJoinRoomFailed(errorCode);
                 } else {
                     onJoinRoomSuccess();
                 }
@@ -124,7 +125,8 @@ public class LiveStreamingActivity extends AppCompatActivity {
         });
     }
 
-    private void onJoinRoomFailed() {
+    private void onJoinRoomFailed(int errorCode) {
+        ToastUtil.show(this,"Join room Failed,errorCode: " + errorCode);
         finish();
     }
 
