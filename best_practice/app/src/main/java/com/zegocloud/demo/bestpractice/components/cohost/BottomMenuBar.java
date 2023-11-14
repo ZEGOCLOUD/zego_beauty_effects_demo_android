@@ -17,7 +17,7 @@ import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager.LiveStreamingListener;
 import com.zegocloud.demo.bestpractice.internal.business.RoomRequestType;
 import com.zegocloud.demo.bestpractice.internal.business.cohost.CoHostService.Role;
-import com.zegocloud.demo.bestpractice.internal.business.pk.PKService.PKInfo;
+import com.zegocloud.demo.bestpractice.internal.business.pk.PKService.PKBattleInfo;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
 import com.zegocloud.demo.bestpractice.internal.sdk.components.express.SwitchCameraButton;
@@ -241,8 +241,8 @@ public class BottomMenuBar extends LinearLayout {
             }
         }
 
-        PKInfo pkInfo = ZEGOLiveStreamingManager.getInstance().getPKInfo();
-        if (pkInfo != null) {
+        PKBattleInfo pkBattleInfo = ZEGOLiveStreamingManager.getInstance().getPKBattleInfo();
+        if (pkBattleInfo != null) {
             coHostButton.setVisibility(GONE);
             coHostListButton.setVisibility(GONE);
         }

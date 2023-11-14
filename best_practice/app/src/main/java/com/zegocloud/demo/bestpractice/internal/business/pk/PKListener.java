@@ -1,6 +1,30 @@
 package com.zegocloud.demo.bestpractice.internal.business.pk;
 
+import im.zego.zim.entity.ZIMCallInvitationCancelledInfo;
+import im.zego.zim.entity.ZIMCallInvitationReceivedInfo;
+import im.zego.zim.entity.ZIMCallInvitationTimeoutInfo;
+
 public interface PKListener {
+
+    default void onPKBattleReceived(String requestID, ZIMCallInvitationReceivedInfo info) {
+    }
+
+    default void onInComingPKBattleTimeout(String requestID, ZIMCallInvitationTimeoutInfo info) {
+    }
+
+    default void onPKBattleCancelled(String requestID, ZIMCallInvitationCancelledInfo info) {
+    }
+
+    default void onOutgoingPKBattleTimeout(String userID, String extendedData) {
+    }
+
+
+    default void onPKBattleAccepted(String userID, String extendedData) {
+
+    }
+
+    default void onPKBattleRejected(String userID, String extendedData) {
+    }
 
     default void onPKStarted() {
     }
@@ -8,30 +32,24 @@ public interface PKListener {
     default void onPKEnded() {
     }
 
-    default void onReceiveStartPKRequest(String requestID, String inviter, String inviterName, String roomId) {
+    default void onPKUserCameraOpen(String userID, boolean open) {
     }
 
-    default void onReceiveStopPKRequest(String requestID) {
+    default void onPKUserMicrophoneOpen(String userID, boolean open) {
     }
 
-    default void onInComingStartPKRequestTimeout(String requestID) {
+    default void onPKUserConnecting(String userID, long duration) {
     }
 
-    default void onOutgoingStartPKRequestTimeout() {
+    default void onPKUserQuit(String userID, String extendedData) {
+
     }
 
-    default void onInComingStartPKRequestCancelled(String requestID) {
+    default void onPKUserJoin(String userID, String extendedData) {
+
     }
 
-    default void onOutgoingStartPKRequestRejected() {
-    }
+    default void onPKUserUpdate() {
 
-    default void onPKCameraOpen(String userID, boolean open) {
-    }
-
-    default void onPKMicrophoneOpen(String userID, boolean open) {
-    }
-
-    default void onPKSEITimeOut(String userID, boolean timeout) {
     }
 }
