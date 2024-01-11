@@ -2,6 +2,7 @@ package com.zegocloud.demo.bestpractice.internal.sdk.express;
 
 import android.app.Application;
 import im.zego.zegoexpress.ZegoExpressEngine;
+import im.zego.zegoexpress.callback.IZegoCustomVideoCaptureHandler;
 import im.zego.zegoexpress.callback.IZegoCustomVideoProcessHandler;
 import im.zego.zegoexpress.callback.IZegoEventHandler;
 import im.zego.zegoexpress.callback.IZegoIMSendBarrageMessageCallback;
@@ -15,7 +16,9 @@ import im.zego.zegoexpress.callback.IZegoRoomSetRoomExtraInfoCallback;
 import im.zego.zegoexpress.callback.IZegoUploadLogResultCallback;
 import im.zego.zegoexpress.constants.ZegoPublishChannel;
 import im.zego.zegoexpress.constants.ZegoScenario;
+import im.zego.zegoexpress.constants.ZegoVideoMirrorMode;
 import im.zego.zegoexpress.entity.ZegoCanvas;
+import im.zego.zegoexpress.entity.ZegoCustomVideoCaptureConfig;
 import im.zego.zegoexpress.entity.ZegoCustomVideoProcessConfig;
 import im.zego.zegoexpress.entity.ZegoEngineProfile;
 import im.zego.zegoexpress.entity.ZegoMixerTask;
@@ -24,6 +27,8 @@ import im.zego.zegoexpress.entity.ZegoPublisherConfig;
 import im.zego.zegoexpress.entity.ZegoRoomConfig;
 import im.zego.zegoexpress.entity.ZegoUser;
 import im.zego.zegoexpress.entity.ZegoVideoConfig;
+import im.zego.zegoexpress.entity.ZegoVideoFrameParam;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -216,5 +221,24 @@ class ExpressEngineProxy {
 
     public void setVideoConfig(ZegoVideoConfig videoConfig, ZegoPublishChannel publishChannel) {
         ZegoExpressEngine.getEngine().setVideoConfig(videoConfig, publishChannel);
+    }
+
+    public void enableCustomVideoCapture(boolean enable, ZegoCustomVideoCaptureConfig config,
+        ZegoPublishChannel channel) {
+        ZegoExpressEngine.getEngine().enableCustomVideoCapture(enable, config, channel);
+    }
+
+    public void setCustomVideoCaptureHandler(IZegoCustomVideoCaptureHandler handler) {
+        ZegoExpressEngine.getEngine().setCustomVideoCaptureHandler(handler);
+    }
+
+    public void sendCustomVideoCaptureRawData(ByteBuffer data, int dataLength, ZegoVideoFrameParam params,
+        long referenceTimeMillisecond, ZegoPublishChannel channel) {
+        ZegoExpressEngine.getEngine()
+            .sendCustomVideoCaptureRawData(data, dataLength, params, referenceTimeMillisecond, channel);
+    }
+
+    public void setVideoMirrorMode(ZegoVideoMirrorMode mirrorMode, ZegoPublishChannel channel) {
+        ZegoExpressEngine.getEngine().setVideoMirrorMode(mirrorMode, channel);
     }
 }

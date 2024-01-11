@@ -2,19 +2,27 @@ package com.zegocloud.demo.bestpractice.activity;
 
 import android.Manifest.permission;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.permissionx.guolindev.PermissionX;
 import com.permissionx.guolindev.callback.RequestCallback;
 import com.zegocloud.demo.bestpractice.R;
 import com.zegocloud.demo.bestpractice.components.call.CallInviteDialog;
+import com.zegocloud.demo.bestpractice.components.deepar.DeepARService;
 import com.zegocloud.demo.bestpractice.databinding.ActivityCallInvitationBinding;
 import com.zegocloud.demo.bestpractice.internal.ZEGOCallInvitationManager;
 import com.zegocloud.demo.bestpractice.internal.business.call.CallChangedListener;
@@ -23,6 +31,7 @@ import com.zegocloud.demo.bestpractice.internal.business.call.CallInviteUser;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
 import com.zegocloud.demo.bestpractice.internal.utils.ToastUtil;
+import com.zegocloud.demo.bestpractice.internal.utils.Utils;
 import im.zego.zegoexpress.callback.IZegoRoomLoginCallback;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +53,33 @@ public class CallInvitationActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.toolbar);
         getSupportActionBar().setTitle("CallInvitationActivity");
+
+        DeepARService deepARService = DeepARService.getInstance();
+        deepARService.initializeDeepAR(this);
+
+        binding.deepArButton.setOnClickListener(v -> {
+            String[] arEffects = new String[deepARService.getAllEffects().size()];
+            for (int i = 0; i < deepARService.getAllEffects().size(); i++) {
+                arEffects[i] = deepARService.getAllEffects().get(i).replace(".deepar", "");
+            }
+            int currentIndex = deepARService.getCurrentIndex();
+            AlertDialog alertDialog = new MaterialAlertDialogBuilder(this).setTitle("AR Effects")
+                .setSingleChoiceItems(arEffects, currentIndex, new OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        deepARService.switchEffect(which);
+                    }
+                }).create();
+            alertDialog.show();
+            Window window = alertDialog.getWindow();
+            if (window != null) {
+                // 设置对话框的最大高度
+                WindowManager.LayoutParams params = window.getAttributes();
+                params.height = Utils.dp2px(400, getResources().getDisplayMetrics()); // 设置最大高度为 800 像素
+                params.gravity = Gravity.BOTTOM;
+                window.setAttributes(params);
+            }
+        });
 
         ZEGOSDKUser currentUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
         ZEGOCallInvitationManager.getInstance().setCallInviteUserComparator(new Comparator<CallInviteUser>() {
@@ -77,11 +113,6 @@ public class CallInvitationActivity extends AppCompatActivity {
         MenuItem add_new_user = menu.add("");
         add_new_user.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         add_new_user.setIcon(R.drawable.baseline_add_24);
-        //        TextView textView = new TextView(this);
-        //        textView.setText(R.string.add_new_user);
-        //        textView.setTextColor(Color.WHITE);
-        //        add_new_user.setActionView(textView);
-
         return true;
     }
 
@@ -98,10 +129,12 @@ public class CallInvitationActivity extends AppCompatActivity {
             binding.callCameraBtn.open();
             binding.callCameraBtn.setVisibility(View.VISIBLE);
             binding.callCameraSwitchBtn.setVisibility(View.VISIBLE);
+            binding.deepArButton.setVisibility(View.VISIBLE);
         } else {
             binding.callCameraBtn.close();
             binding.callCameraBtn.setVisibility(View.GONE);
             binding.callCameraSwitchBtn.setVisibility(View.GONE);
+            binding.deepArButton.setVisibility(View.GONE);
         }
 
         binding.callHangupBtn.setOnClickListener(v -> {
@@ -130,6 +163,7 @@ public class CallInvitationActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if (isFinishing()) {
+            DeepARService.getInstance().release();
             ZEGOCallInvitationManager.getInstance().quitCallAndLeaveRoom();
         }
     }

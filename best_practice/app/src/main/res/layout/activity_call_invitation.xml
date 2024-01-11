@@ -21,7 +21,7 @@
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
-  <com.zegocloud.demo.bestpractice.internal.sdk.components.express.ToggleCameraButton
+  <com.zegocloud.demo.bestpractice.components.deepar.DeepARCameraButton
     android:id="@+id/call_camera_btn"
     android:layout_width="48dp"
     android:layout_height="48dp"
@@ -44,7 +44,6 @@
     app:layout_constraintHorizontal_bias="0.5"
     app:layout_constraintStart_toEndOf="@+id/call_camera_btn" />
 
-
   <ImageView
     android:id="@+id/call_hangup_btn"
     android:layout_width="52dp"
@@ -57,7 +56,7 @@
     app:layout_constraintStart_toEndOf="@+id/call_mic_btn" />
 
 
-  <com.zegocloud.demo.bestpractice.internal.sdk.components.express.SwitchCameraButton
+  <com.zegocloud.demo.bestpractice.components.deepar.DeepARSwitchButton
     android:id="@+id/call_camera_switch_btn"
     android:layout_width="48dp"
     android:layout_height="48dp"
@@ -72,12 +71,22 @@
     android:id="@+id/call_speaker_btn"
     android:layout_width="48dp"
     android:layout_height="48dp"
-    android:layout_marginEnd="16dp"
     android:layout_marginBottom="36dp"
     android:background="@drawable/call_icon_speaker"
     app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintEnd_toStartOf="@+id/deep_ar_button"
     app:layout_constraintHorizontal_bias="0.5"
     app:layout_constraintStart_toEndOf="@+id/call_camera_switch_btn" />
 
+  <com.zegocloud.demo.bestpractice.components.deepar.DeepARButton
+    android:id="@+id/deep_ar_button"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="36dp"
+    android:visibility="gone"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.5"
+    app:layout_constraintStart_toEndOf="@+id/call_speaker_btn" />
 </androidx.constraintlayout.widget.ConstraintLayout>

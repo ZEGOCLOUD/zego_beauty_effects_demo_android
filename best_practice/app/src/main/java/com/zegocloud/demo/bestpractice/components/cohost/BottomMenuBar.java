@@ -4,12 +4,16 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import androidx.annotation.Nullable;
 import com.zegocloud.demo.bestpractice.R;
 import com.zegocloud.demo.bestpractice.components.RoomRequestListDialog;
+import com.zegocloud.demo.bestpractice.components.deepar.DeepARCameraButton;
+import com.zegocloud.demo.bestpractice.components.deepar.DeepARSwitchButton;
 import com.zegocloud.demo.bestpractice.components.message.barrage.BottomInputDialog;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager.LiveStreamingListener;
@@ -24,6 +28,7 @@ import com.zegocloud.demo.bestpractice.internal.sdk.components.express.ToggleMic
 import com.zegocloud.demo.bestpractice.internal.sdk.express.IExpressEngineEventHandler;
 import com.zegocloud.demo.bestpractice.internal.utils.Utils;
 import java.util.Objects;
+import timber.log.Timber;
 
 public class BottomMenuBar extends LinearLayout {
 
@@ -97,7 +102,7 @@ public class BottomMenuBar extends LinearLayout {
         childLinearLayout.addView(coHostListButton, generateChildImageLayoutParams());
 
         ZEGOSDKUser localUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
-        cameraButton = new ToggleCameraButton(getContext());
+        cameraButton = new DeepARCameraButton(getContext());
         cameraButton.updateState(localUser.isCameraOpen());
         childLinearLayout.addView(cameraButton, generateChildImageLayoutParams());
 
@@ -105,7 +110,7 @@ public class BottomMenuBar extends LinearLayout {
         microphoneButton.updateState(localUser.isMicrophoneOpen());
         childLinearLayout.addView(microphoneButton, generateChildImageLayoutParams());
 
-        switchCameraButton = new SwitchCameraButton(getContext());
+        switchCameraButton = new DeepARSwitchButton(getContext());
         childLinearLayout.addView(switchCameraButton, generateChildImageLayoutParams());
 
         coHostButton = new CoHostButton(getContext());
@@ -134,6 +139,7 @@ public class BottomMenuBar extends LinearLayout {
         ZEGOLiveStreamingManager.getInstance().addLiveStreamingListener(new LiveStreamingListener() {
             @Override
             public void onRoleChanged(String userID, int after) {
+                Timber.d("onRoleChanged() called with: userID = [" + userID + "], after = [" + after + "]");
                 ZEGOSDKUser localUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
                 if (Objects.equals(localUser.userID, userID)) {
                     onUserRoleChanged(after);
@@ -162,6 +168,22 @@ public class BottomMenuBar extends LinearLayout {
         });
     }
 
+    public void addChildSubView(View view) {
+        addChildSubView(view, null);
+    }
+
+    private void addChildSubView(View view, LinearLayout.LayoutParams layoutParams) {
+        if (layoutParams == null) {
+            if (view instanceof TextView) {
+                childLinearLayout.addView(view, generateChildTextLayoutParams());
+            } else if (view instanceof ImageView) {
+                childLinearLayout.addView(view, generateChildImageLayoutParams());
+            }
+        } else {
+            childLinearLayout.addView(view, layoutParams);
+        }
+    }
+
     private LayoutParams generateChildImageLayoutParams() {
         int size = Utils.dp2px(36f, getResources().getDisplayMetrics());
         int marginTop = Utils.dp2px(16f, getResources().getDisplayMetrics());
@@ -176,7 +198,7 @@ public class BottomMenuBar extends LinearLayout {
         return layoutParams;
     }
 
-    private LayoutParams generateChildTextLayoutParams() {
+    public LayoutParams generateChildTextLayoutParams() {
         int size = Utils.dp2px(36f, getResources().getDisplayMetrics());
         int marginTop = Utils.dp2px(16f, getResources().getDisplayMetrics());
         int marginBottom = Utils.dp2px(16f, getResources().getDisplayMetrics());

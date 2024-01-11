@@ -1,6 +1,7 @@
 package com.zegocloud.demo.bestpractice.internal.business.cohost;
 
 import android.text.TextUtils;
+import android.util.Log;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
@@ -8,6 +9,7 @@ import im.zego.zegoexpress.constants.ZegoPublisherState;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import timber.log.Timber;
 
 public class CoHostService {
 
@@ -134,16 +136,10 @@ public class CoHostService {
     }
 
     public void onReceiveStreamRemove(List<ZEGOSDKUser> userList) {
+        Timber.d("onReceiveStreamRemove() called with: userList = [" + userList + "]");
         for (ZEGOSDKUser zegosdkUser : userList) {
             if (zegosdkUser.equals(hostUser)) {
                 setHostUser(null);
-                ZEGOSDKUser localUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
-                if (ZEGOLiveStreamingManager.getInstance().isCoHost(localUser.userID)) {
-                    ZEGOSDKManager.getInstance().expressService.openMicrophone(false);
-                    ZEGOSDKManager.getInstance().expressService.openCamera(false);
-                    ZEGOSDKManager.getInstance().expressService.stopPreview();
-                    ZEGOSDKManager.getInstance().expressService.stopPublishingStream();
-                }
             } else {
                 removeCoHost(zegosdkUser);
             }

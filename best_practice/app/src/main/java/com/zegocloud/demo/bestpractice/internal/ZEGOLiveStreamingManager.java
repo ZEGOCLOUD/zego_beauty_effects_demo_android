@@ -1,5 +1,7 @@
 package com.zegocloud.demo.bestpractice.internal;
 
+import android.app.Activity;
+import com.zegocloud.demo.bestpractice.components.deepar.DeepARService;
 import com.zegocloud.demo.bestpractice.internal.business.UserRequestCallback;
 import com.zegocloud.demo.bestpractice.internal.business.cohost.CoHostService;
 import com.zegocloud.demo.bestpractice.internal.business.cohost.CoHostService.CoHostListener;
@@ -11,8 +13,12 @@ import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
 import com.zegocloud.demo.bestpractice.internal.sdk.express.IExpressEngineEventHandler;
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.IZIMEventHandler;
+import im.zego.zegoexpress.callback.IZegoCustomVideoCaptureHandler;
 import im.zego.zegoexpress.callback.IZegoMixerStartCallback;
+import im.zego.zegoexpress.constants.ZegoPublishChannel;
 import im.zego.zegoexpress.constants.ZegoPublisherState;
+import im.zego.zegoexpress.constants.ZegoVideoBufferType;
+import im.zego.zegoexpress.entity.ZegoCustomVideoCaptureConfig;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +110,7 @@ public class ZEGOLiveStreamingManager {
                 ZEGOSDKManager.getInstance().zimService.removeAllRequest();
                 ZEGOSDKUser currentUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
                 if (ZEGOLiveStreamingManager.getInstance().isCoHost(currentUser.userID)) {
-                    ZEGOSDKManager.getInstance().expressService.openCamera(false);
+                    closeCamera();
                     ZEGOSDKManager.getInstance().expressService.openMicrophone(false);
                     ZEGOSDKManager.getInstance().expressService.stopPublishingStream();
                 }
@@ -139,6 +145,16 @@ public class ZEGOLiveStreamingManager {
 
     public void endCoHost() {
         coHostService.endCoHost();
+    }
+
+    public void endCoHost(Activity activity) {
+        closeCamera();
+        coHostService.endCoHost();
+    }
+
+    public void startCoHost(Activity activity) {
+        openCamera(activity);
+        coHostService.startCoHost();
     }
 
     public void startCoHost() {
@@ -254,6 +270,17 @@ public class ZEGOLiveStreamingManager {
         }
     }
 
+    public void enableCustomVideoCapture(boolean enable) {
+        ZegoCustomVideoCaptureConfig videoCaptureConfig = new ZegoCustomVideoCaptureConfig();
+        videoCaptureConfig.bufferType = ZegoVideoBufferType.RAW_DATA;
+        ZEGOSDKManager.getInstance().expressService.enableCustomVideoCapture(enable, videoCaptureConfig,
+            ZegoPublishChannel.MAIN);
+    }
+
+    public void setCustomVideoCaptureHandler(IZegoCustomVideoCaptureHandler handler) {
+        ZEGOSDKManager.getInstance().expressService.setCustomVideoCaptureHandler(handler);
+    }
+
     public void setMixLayoutProvider(MixLayoutProvider mixLayoutProvider) {
         this.mixLayoutProvider = mixLayoutProvider;
     }
@@ -269,6 +296,21 @@ public class ZEGOLiveStreamingManager {
         ZEGOLiveStreamingManager.getInstance().removeRoomData();
         ZEGOLiveStreamingManager.getInstance().removeRoomListeners();
         ZEGOSDKManager.getInstance().logoutRoom(null);
+    }
+
+    public void openCamera(Activity activity) {
+        DeepARService.getInstance().openCamera(activity);
+        ZEGOSDKManager.getInstance().expressService.openCamera(true);
+    }
+
+    public void closeCamera() {
+        DeepARService.getInstance().closeCamera();
+        ZEGOSDKManager.getInstance().expressService.openCamera(false);
+    }
+
+    public void useFrontCamera(Activity activity, boolean front) {
+        DeepARService.getInstance().switchCamera(activity);
+        ZEGOSDKManager.getInstance().expressService.useFrontCamera(front);
     }
 
     public interface LiveStreamingListener extends CoHostListener, PKListener {

@@ -1,10 +1,12 @@
 package com.zegocloud.demo.bestpractice.internal;
 
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 import com.zegocloud.demo.bestpractice.components.call.IncomingCallDialog;
+import com.zegocloud.demo.bestpractice.components.deepar.DeepARService;
 import com.zegocloud.demo.bestpractice.internal.business.UserRequestCallback;
 import com.zegocloud.demo.bestpractice.internal.business.call.CallChangedListener;
 import com.zegocloud.demo.bestpractice.internal.business.call.CallExtendedData;
@@ -626,5 +628,20 @@ public class ZEGOCallInvitationManager {
         Timber.d("removeCallListener() called with: listener = [" + listener + "]");
         callListeners.remove(listener);
         autoRemoveCallListeners.remove(listener);
+    }
+
+    public void openCamera(Activity activity) {
+        DeepARService.getInstance().openCamera(activity);
+        ZEGOSDKManager.getInstance().expressService.openCamera(true);
+    }
+
+    public void closeCamera() {
+        DeepARService.getInstance().closeCamera();
+        ZEGOSDKManager.getInstance().expressService.openCamera(false);
+    }
+
+    public void useFrontCamera(Activity activity, boolean front) {
+        DeepARService.getInstance().switchCamera(activity);
+        ZEGOSDKManager.getInstance().expressService.useFrontCamera(front);
     }
 }

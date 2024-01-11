@@ -2,10 +2,10 @@ package com.zegocloud.demo.bestpractice.internal.sdk.express;
 
 import android.app.Application;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.TextureView;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
 import im.zego.zegoexpress.ZegoExpressEngine;
+import im.zego.zegoexpress.callback.IZegoCustomVideoCaptureHandler;
 import im.zego.zegoexpress.callback.IZegoCustomVideoProcessHandler;
 import im.zego.zegoexpress.callback.IZegoEventHandler;
 import im.zego.zegoexpress.callback.IZegoIMSendBarrageMessageCallback;
@@ -23,8 +23,10 @@ import im.zego.zegoexpress.constants.ZegoRoomStateChangedReason;
 import im.zego.zegoexpress.constants.ZegoScenario;
 import im.zego.zegoexpress.constants.ZegoStreamEvent;
 import im.zego.zegoexpress.constants.ZegoUpdateType;
+import im.zego.zegoexpress.constants.ZegoVideoMirrorMode;
 import im.zego.zegoexpress.constants.ZegoViewMode;
 import im.zego.zegoexpress.entity.ZegoCanvas;
+import im.zego.zegoexpress.entity.ZegoCustomVideoCaptureConfig;
 import im.zego.zegoexpress.entity.ZegoCustomVideoProcessConfig;
 import im.zego.zegoexpress.entity.ZegoEngineConfig;
 import im.zego.zegoexpress.entity.ZegoMixerTask;
@@ -35,6 +37,8 @@ import im.zego.zegoexpress.entity.ZegoRoomExtraInfo;
 import im.zego.zegoexpress.entity.ZegoStream;
 import im.zego.zegoexpress.entity.ZegoUser;
 import im.zego.zegoexpress.entity.ZegoVideoConfig;
+import im.zego.zegoexpress.entity.ZegoVideoFrameParam;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -757,6 +761,36 @@ public class ExpressService {
             return;
         }
         engineProxy.setCustomVideoProcessHandler(handler);
+    }
+
+    public void enableCustomVideoCapture(boolean enable, ZegoCustomVideoCaptureConfig config,
+        ZegoPublishChannel channel) {
+        if (engineProxy.getExpressEngine() == null) {
+            return;
+        }
+        engineProxy.enableCustomVideoCapture(enable, config, channel);
+    }
+
+    public void setCustomVideoCaptureHandler(IZegoCustomVideoCaptureHandler handler) {
+        if (engineProxy.getExpressEngine() == null) {
+            return;
+        }
+        engineProxy.setCustomVideoCaptureHandler(handler);
+    }
+
+    public void sendCustomVideoCaptureRawData(ByteBuffer data, int dataLength, ZegoVideoFrameParam params,
+        long referenceTimeMillisecond, ZegoPublishChannel channel) {
+        if (engineProxy.getExpressEngine() == null) {
+            return;
+        }
+        engineProxy.sendCustomVideoCaptureRawData(data, dataLength, params, referenceTimeMillisecond, channel);
+    }
+
+    public void setVideoMirrorMode(ZegoVideoMirrorMode mirrorMode, ZegoPublishChannel channel) {
+        if (engineProxy.getExpressEngine() == null) {
+            return;
+        }
+        engineProxy.setVideoMirrorMode(mirrorMode, channel);
     }
 
     public ZegoVideoConfig getVideoConfig() {

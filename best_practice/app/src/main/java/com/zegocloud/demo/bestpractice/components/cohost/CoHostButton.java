@@ -1,5 +1,6 @@
 package com.zegocloud.demo.bestpractice.components.cohost;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.util.AttributeSet;
@@ -111,7 +112,7 @@ public class CoHostButton extends ZTextButton {
         }
 
         if (ZEGOLiveStreamingManager.getInstance().isCoHost(localUser.userID)) {
-            ZEGOLiveStreamingManager.getInstance().endCoHost();
+            ZEGOLiveStreamingManager.getInstance().endCoHost((Activity) getContext());
             audienceUI();
         } else {
             RoomRequest roomRequest = ZEGOSDKManager.getInstance().zimService.getRoomRequestByRequestID(mRoomRequestID);

@@ -5,20 +5,29 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.permissionx.guolindev.PermissionX;
 import com.permissionx.guolindev.callback.RequestCallback;
 import com.zegocloud.demo.bestpractice.R;
+import com.zegocloud.demo.bestpractice.components.deepar.DeepARButton;
+import com.zegocloud.demo.bestpractice.components.deepar.DeepARService;
 import com.zegocloud.demo.bestpractice.databinding.ActivityLiveStreamingBinding;
+import com.zegocloud.demo.bestpractice.internal.ZEGOCallInvitationManager;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager.LiveStreamingListener;
 import com.zegocloud.demo.bestpractice.internal.business.RoomRequestExtendedData;
 import com.zegocloud.demo.bestpractice.internal.business.RoomRequestType;
+import com.zegocloud.demo.bestpractice.internal.business.cohost.CoHostService.Role;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKCallBack;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
@@ -26,6 +35,7 @@ import com.zegocloud.demo.bestpractice.internal.sdk.express.ExpressService;
 import com.zegocloud.demo.bestpractice.internal.sdk.express.IExpressEngineEventHandler;
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.IZIMEventHandler;
 import com.zegocloud.demo.bestpractice.internal.utils.ToastUtil;
+import com.zegocloud.demo.bestpractice.internal.utils.Utils;
 import im.zego.zegoexpress.callback.IZegoRoomLoginCallback;
 import im.zego.zegoexpress.constants.ZegoPublisherState;
 import im.zego.zegoexpress.constants.ZegoRoomStateChangedReason;
@@ -43,6 +53,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.json.JSONObject;
+import timber.log.Timber;
 
 public class LiveStreamingActivity extends AppCompatActivity {
 
@@ -50,6 +61,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
     private String liveID;
     //    private AlertDialog inviteCoHostDialog;
     private AlertDialog zimReconnectDialog;
+    private DeepARButton deepARButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +77,35 @@ public class LiveStreamingActivity extends AppCompatActivity {
         binding.liveAudioroomTopbar.setRoomID(liveID);
 
         ZEGOLiveStreamingManager.getInstance().addRoomListeners();
+        DeepARService deepARService = DeepARService.getInstance();
+        deepARService.initializeDeepAR(this);
+
+        deepARButton = new DeepARButton(this);
+        deepARButton.setVisibility(View.GONE);
+        deepARButton.setOnClickListener(v -> {
+            String[] arEffects = new String[deepARService.getAllEffects().size()];
+            for (int i = 0; i < deepARService.getAllEffects().size(); i++) {
+                arEffects[i] = deepARService.getAllEffects().get(i).replace(".deepar", "");
+            }
+            int currentIndex = deepARService.getCurrentIndex();
+            AlertDialog alertDialog = new MaterialAlertDialogBuilder(this).setTitle("AR Effects")
+                .setSingleChoiceItems(arEffects, currentIndex, new OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        deepARService.switchEffect(which);
+                    }
+                }).create();
+            alertDialog.show();
+            Window window = alertDialog.getWindow();
+            if (window != null) {
+                // 设置对话框的最大高度
+                WindowManager.LayoutParams params = window.getAttributes();
+                params.height = Utils.dp2px(400, getResources().getDisplayMetrics()); // 设置最大高度为 800 像素
+                params.gravity = Gravity.BOTTOM;
+                window.setAttributes(params);
+            }
+        });
+        binding.liveBottomMenuBar.addChildSubView(deepARButton);
 
         listenSDKEvent();
 
@@ -74,7 +115,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
 
         if (isHost) {
             // join when click start
-            ZEGOSDKManager.getInstance().expressService.openCamera(true);
+            ZEGOLiveStreamingManager.getInstance().openCamera(this);
             ZEGOSDKManager.getInstance().expressService.openMicrophone(true);
             binding.previewStart.setVisibility(View.VISIBLE);
             binding.mainHostVideo.startPreviewOnly();
@@ -83,7 +124,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
             ZEGOLiveStreamingManager.getInstance().setHostUser(currentUser);
         } else {
             // join right now
-            ZEGOSDKManager.getInstance().expressService.openCamera(false);
+            ZEGOLiveStreamingManager.getInstance().closeCamera();
             ZEGOSDKManager.getInstance().expressService.openMicrophone(false);
             binding.previewStart.setVisibility(View.GONE);
             loginRoom();
@@ -104,7 +145,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
     }
 
     private void onJoinRoomFailed(int errorCode) {
-        ToastUtil.show(this,"Join room Failed,errorCode: " + errorCode);
+        ToastUtil.show(this, "Join room Failed,errorCode: " + errorCode);
         finish();
     }
 
@@ -122,43 +163,44 @@ public class LiveStreamingActivity extends AppCompatActivity {
         int width = binding.getRoot().getWidth() / 4;
         binding.mainHostVideoIcon.setCircleBackgroundRadius(width);
 
-//        ZEGOLiveStreamingManager.getInstance().setMixLayoutProvider(new MixLayoutProvider() {
-//            @Override
-//            public ArrayList<ZegoMixerInput> getMixVideoInputs(List<String> streamList,
-//                ZegoMixerVideoConfig videoConfig) {
-//                ArrayList<ZegoMixerInput> inputList = new ArrayList<>();
-//                if (streamList.size() < 4) {
-//                    for (int i = 0; i < streamList.size(); i++) {
-//                        int left = (videoConfig.width / streamList.size()) * i;
-//                        int top = 0;
-//                        int right = (videoConfig.width / streamList.size()) * (i + 1);
-//                        int bottom = videoConfig.height;
-//                        ZegoMixerInput input_1 = new ZegoMixerInput(streamList.get(i), ZegoMixerInputContentType.VIDEO,
-//                            new Rect(left, top, right, bottom));
-//                        input_1.renderMode = ZegoMixRenderMode.FILL;
-//                        inputList.add(input_1);
-//                    }
-//                } else if (streamList.size() == 4) {
-//                    for (int i = 0; i < streamList.size(); i++) {
-//                        int left = (videoConfig.width / 2) * (i % 2);
-//                        int top = (videoConfig.height / 2) * (i < 2 ? 0 : 1);
-//                        int right = left + videoConfig.width / 2;
-//                        int bottom = top + videoConfig.height / 2;
-//                        ZegoMixerInput input_1 = new ZegoMixerInput(streamList.get(i), ZegoMixerInputContentType.VIDEO,
-//                            new Rect(left, top, right, bottom));
-//                        input_1.renderMode = ZegoMixRenderMode.FILL;
-//                        inputList.add(input_1);
-//                    }
-//                }
-//                return inputList;
-//            }
-//        });
+        //        ZEGOLiveStreamingManager.getInstance().setMixLayoutProvider(new MixLayoutProvider() {
+        //            @Override
+        //            public ArrayList<ZegoMixerInput> getMixVideoInputs(List<String> streamList,
+        //                ZegoMixerVideoConfig videoConfig) {
+        //                ArrayList<ZegoMixerInput> inputList = new ArrayList<>();
+        //                if (streamList.size() < 4) {
+        //                    for (int i = 0; i < streamList.size(); i++) {
+        //                        int left = (videoConfig.width / streamList.size()) * i;
+        //                        int top = 0;
+        //                        int right = (videoConfig.width / streamList.size()) * (i + 1);
+        //                        int bottom = videoConfig.height;
+        //                        ZegoMixerInput input_1 = new ZegoMixerInput(streamList.get(i), ZegoMixerInputContentType.VIDEO,
+        //                            new Rect(left, top, right, bottom));
+        //                        input_1.renderMode = ZegoMixRenderMode.FILL;
+        //                        inputList.add(input_1);
+        //                    }
+        //                } else if (streamList.size() == 4) {
+        //                    for (int i = 0; i < streamList.size(); i++) {
+        //                        int left = (videoConfig.width / 2) * (i % 2);
+        //                        int top = (videoConfig.height / 2) * (i < 2 ? 0 : 1);
+        //                        int right = left + videoConfig.width / 2;
+        //                        int bottom = top + videoConfig.height / 2;
+        //                        ZegoMixerInput input_1 = new ZegoMixerInput(streamList.get(i), ZegoMixerInputContentType.VIDEO,
+        //                            new Rect(left, top, right, bottom));
+        //                        input_1.renderMode = ZegoMixRenderMode.FILL;
+        //                        inputList.add(input_1);
+        //                    }
+        //                }
+        //                return inputList;
+        //            }
+        //        });
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         if (isFinishing()) {
+            DeepARService.getInstance().release();
             ZEGOLiveStreamingManager.getInstance().leave();
         }
     }
@@ -196,6 +238,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
 
             @Override
             public void onReceiveStreamRemove(List<ZEGOSDKUser> userList) {
+                Timber.d("onReceiveStreamRemove() called with: userList = [" + userList + "]");
                 List<ZEGOSDKUser> coHostUserList = new ArrayList<>();
                 for (ZEGOSDKUser ZEGOSDKUser : userList) {
                     if (Objects.equals(binding.mainHostVideo.getUserID(), ZEGOSDKUser.userID)) {
@@ -204,7 +247,6 @@ public class LiveStreamingActivity extends AppCompatActivity {
                         binding.mainHostVideo.setUserID("");
                         binding.mainHostVideoIcon.setLetter("");
                         binding.mainHostVideoLayout.setVisibility(View.GONE);
-
                     } else {
                         coHostUserList.add(ZEGOSDKUser);
                     }
@@ -311,7 +353,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
                             @Override
                             public void onResult(boolean allGranted, @NonNull List<String> grantedList,
                                 @NonNull List<String> deniedList) {
-                                ZEGOLiveStreamingManager.getInstance().startCoHost();
+                                ZEGOLiveStreamingManager.getInstance().startCoHost(LiveStreamingActivity.this);
                             }
                         });
                     }
@@ -383,6 +425,29 @@ public class LiveStreamingActivity extends AppCompatActivity {
                         ZEGOLiveStreamingManager.getInstance().removeUserFromPKBattle(userID);
                     } else {
                         ZEGOLiveStreamingManager.getInstance().quitPKBattle();
+                    }
+                }
+            }
+
+            @Override
+            public void onRoleChanged(String userID, int after) {
+                ZEGOSDKUser hostUser = ZEGOLiveStreamingManager.getInstance().getHostUser();
+                ZEGOSDKUser currentUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
+                if (hostUser != null) {
+                    if (!hostUser.equals(currentUser)) {
+                        //not self
+                        if (Objects.equals(hostUser.userID, userID) && after != Role.HOST) {
+                            // host become not host
+                            ZEGOLiveStreamingManager.getInstance().endCoHost(LiveStreamingActivity.this);
+                        }
+                    }
+
+                }
+                if (Objects.equals(currentUser.userID, userID)) {
+                    if (after == Role.CO_HOST || after == Role.HOST) {
+                        deepARButton.setVisibility(View.VISIBLE);
+                    } else {
+                        deepARButton.setVisibility(View.GONE);
                     }
                 }
             }
