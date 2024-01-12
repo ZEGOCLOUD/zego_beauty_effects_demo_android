@@ -69,7 +69,7 @@ implementation "androidx.camera:camera-view:$camerax_version"
 
 2. Copy the `com.zegocloud.demo.bestpractice.components.deepar` directory to your project code directory, and copy the `assets/deepAR` folder to the assets directory of your project. 
 
-![](https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/feature/deepAR/best_practice/pngs/deepar_copy.jpg)
+![copy](https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/feature/deepAR/best_practice/pngs/deepar_copy.jpg)
 
 
 3. Initialize DeepAR SDK and native CameraX 
