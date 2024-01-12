@@ -50,76 +50,82 @@ In this demo, the integration of DeepAR SDK has already been completed. Therefor
 ### Integrate DeepAR SDK into your ZEGO Express SDK project
 If you need to add DeepAR to your own project, you can follow these steps:
 
-1. Add DeepAR dependencies and obtain DeepAR license.
+1.  Add DeepAR dependencies and obtain DeepAR license.
 
-Refer to: https://docs.deepar.ai/deepar-sdk/platforms/android/getting-started
+    Refer to: https://docs.deepar.ai/deepar-sdk/platforms/android/getting-started
 
-In addition, since CameraX is required, you also need to add the dependency in the app-level build.gradle file:
+    In addition, since CameraX is required, you also need to add the dependency in the app-level build.gradle file:
 
-```groovy
+    ```groovy
 
-def camerax_version = "1.2.3" // cameraX
-implementation "androidx.camera:camera-core:$camerax_version"
-implementation "androidx.camera:camera-camera2:$camerax_version"
-implementation "androidx.camera:camera-lifecycle:$camerax_version"
-implementation "androidx.camera:camera-view:$camerax_version"
+    def camerax_version = "1.2.3" // cameraX
+    implementation "androidx.camera:camera-core:$camerax_version"
+    implementation "androidx.camera:camera-camera2:$camerax_version"
+    implementation "androidx.camera:camera-lifecycle:$camerax_version"
+    implementation "androidx.camera:camera-view:$camerax_version"
 
-```
-
-
-2. Copy the `com.zegocloud.demo.bestpractice.components.deepar` directory to your project code directory, and copy the `assets/deepAR` folder to the assets directory of your project. 
-
-![copy](https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/feature/deepAR/best_practice/pngs/deepar_copy.jpg)
+    ```
 
 
-3. Initialize DeepAR SDK and native CameraX 
-We need to initialize DeepAR SDK in the activity where we use it, by calling `DeepARService.getInstance().initializeDeepAR(this)`. 
+2.  Copy the `com.zegocloud.demo.bestpractice.components.deepar` directory to your project code directory, and copy the `assets/deepAR` folder to the assets directory of your project. 
+
+    ![copy](./pngs/deepar_copy.jpg)
 
 
-4. Add CameraX camera control 
-Since we are now using the native CameraX interfaces to control the device's camera for data capture, when rendering DeepAR visual effects, camera control needs to include calls to CameraX interfaces.
+3.  Initialize DeepAR SDK and native CameraX 
 
-```java
-    public void openCamera(Activity activity) {
-        DeepARService.getInstance().openCamera(activity);
-        ZEGOSDKManager.getInstance().expressService.openCamera(true);
-    }
 
-    public void closeCamera() {
-        DeepARService.getInstance().closeCamera();
-        ZEGOSDKManager.getInstance().expressService.openCamera(false);
-    }
+    We need to initialize DeepAR SDK in the activity where we use it, by calling `DeepARService.getInstance().initializeDeepAR(this)`. 
 
-    public void useFrontCamera(Activity activity, boolean front) {
-        DeepARService.getInstance().switchCamera(activity);
-        ZEGOSDKManager.getInstance().expressService.useFrontCamera(front);
-    }
 
-    public void startCoHost(Activity activity) {
-        openCamera(activity);
-        coHostService.startCoHost();
-    }
+4.  Add CameraX camera control 
 
-    public void endCoHost(Activity activity) {
-        closeCamera();
-        coHostService.endCoHost();
-    }
-```
 
-5. Replace ToggleCameraButton and SwitchCameraButton widget
-If you use `ToggleCameraButton` and `SwitchCameraButton` buttons to control the camera when using ZEGO Express SDK, you need to replace them with `com.zegocloud.demo.bestpractice.components.deepar.DeepARCameraButton` and `com.zegocloud.demo.bestpractice.components.deepar.DeepARSwitchButton` when rendering DeepAR visual effects to gain control over the camera.
+    Since we are now using the native CameraX interfaces to control the device's camera for data capture, when rendering DeepAR visual effects, camera control needs to include calls to CameraX interfaces.
 
-6. Release DeepAR
-Release DeepAR when exiting the activity:
+        ```java
+        public void openCamera(Activity activity) {
+            DeepARService.getInstance().openCamera(activity);
+            ZEGOSDKManager.getInstance().expressService.openCamera(true);
+        }
 
-```java
-protected void onPause() {
-    super.onPause();
-    if (isFinishing()) {
-        DeepARService.getInstance().release();
-    }
-}
-```
+        public void closeCamera() {
+            DeepARService.getInstance().closeCamera();
+            ZEGOSDKManager.getInstance().expressService.openCamera(false);
+        }
+
+        public void useFrontCamera(Activity activity, boolean front) {
+            DeepARService.getInstance().switchCamera(activity);
+            ZEGOSDKManager.getInstance().expressService.useFrontCamera(front);
+        }
+
+        public void startCoHost(Activity activity) {
+            openCamera(activity);
+            coHostService.startCoHost();
+        }
+
+        public void endCoHost(Activity activity) {
+            closeCamera();
+            coHostService.endCoHost();
+        }
+    ```
+
+5.  Replace ToggleCameraButton and SwitchCameraButton widget
+
+
+    If you use `ToggleCameraButton` and `SwitchCameraButton` buttons to control the camera when using ZEGO Express SDK, you need to replace them with `com.zegocloud.demo.bestpractice.components.deepar.DeepARCameraButton` and `com.zegocloud.demo.bestpractice.components.deepar.DeepARSwitchButton` when rendering DeepAR visual effects to gain control over the camera.
+
+6.  Release DeepAR
+    Release DeepAR when exiting the activity:
+
+        ```java
+        protected void onPause() {
+            super.onPause();
+            if (isFinishing()) {
+                DeepARService.getInstance().release();
+            }
+        }
+        ```
 
 ### Supported AR Effects
 
