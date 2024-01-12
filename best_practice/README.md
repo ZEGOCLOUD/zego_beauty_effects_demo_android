@@ -108,7 +108,7 @@ If you need to add DeepAR to your own project, you can follow these steps:
             closeCamera();
             coHostService.endCoHost();
         }
-    ```
+        ```
 
 5.  Replace ToggleCameraButton and SwitchCameraButton widget
 
