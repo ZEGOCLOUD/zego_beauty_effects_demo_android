@@ -16,7 +16,7 @@ open your Android Studio Settings,modify your Gradle JDK to java 11:
 input your ZEGO appID and appSign in class `com.zegocloud.demo.bestpractice.ZEGOSDKKeyCenter.java`.
 
 
-<img src="https://github.com/ZEGOCLOUD/zegocloud_sdk_demo_android/blob/master/best_practice/pngs/demo1.jpg">
+<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/blob/master/best_practice/pngs/demo1.jpg">
 
 
 Now,you can build and run project.
@@ -69,7 +69,7 @@ implementation "androidx.camera:camera-view:$camerax_version"
 
 2. Copy the com.zegocloud.demo.bestpractice.components.deepar directory to your project code directory, and copy the assets/deepAR folder to the assets directory of your project. 
 
-<img src="https://github.com/ZEGOCLOUD/zegocloud_sdk_demo_android/blob/master/best_practice/pngs/deepar_copy.jpg">
+<img src="https://github.com/ZEGOCLOUD/zego_beauty_effects_demo_android/tree/feature/deepAR/best_practice/pngs/deepar_copy.jpg">
 
 3. Initialize DeepAR SDK and native CameraX 
 We need to initialize DeepAR SDK in the activity where we use it, by calling `DeepARService.getInstance().initializeDeepAR(this)`. 
