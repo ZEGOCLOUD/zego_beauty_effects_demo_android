@@ -110,6 +110,24 @@ If you need to add DeepAR to your own project, you can follow these steps:
         }
         ```
 
+    In addition, because the default capture resolution of the native camera is relatively high, it is recommended to proactively set the resolution of the video stream to save bandwidth after you start any live room.
+
+    ```java
+
+     ZEGOSDKManager.getInstance().loginRoom(liveID, ZegoScenario.BROADCAST, new ZEGOSDKCallBack() {
+        @Override
+        public void onResult(int errorCode, String message) {
+            if (errorCode == 0) {
+                // ...
+                ZegoVideoConfig videoConfig = new ZegoVideoConfig(ZegoVideoConfigPreset.PRESET_360P);
+                ZEGOSDKManager.getInstance().expressService.setVideoConfig(videoConfig);
+                // ...
+            } 
+        }
+    });
+    
+    ```
+
 5.  Replace ToggleCameraButton and SwitchCameraButton widget
 
 

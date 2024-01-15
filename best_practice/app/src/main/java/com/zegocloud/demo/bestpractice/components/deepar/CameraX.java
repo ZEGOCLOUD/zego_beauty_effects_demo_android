@@ -18,7 +18,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.concurrent.ExecutionException;
-import timber.log.Timber;
 
 public class CameraX {
 
@@ -29,7 +28,7 @@ public class CameraX {
     private int currentBuffer = 0;
     private static final int NUMBER_OF_BUFFERS = 2;
     private CameraCallback callback;
-    private CameraResolutionPreset cameraResolutionPreset = CameraResolutionPreset.P640x360;
+    private CameraResolutionPreset cameraResolutionPreset = CameraResolutionPreset.P1280x720;
 
     public void setupCamera(Activity activity) {
         cameraProviderFuture = ProcessCameraProvider.getInstance(activity.getApplicationContext());
@@ -66,7 +65,7 @@ public class CameraX {
             width = cameraResolutionPreset.getHeight();
             height = cameraResolutionPreset.getWidth();
         }
-        Timber.d("bindImageAnalysis() called with: width = [" + width + "],height:" + height);
+//        Timber.d("setTargetResolution() called with: width = [" + width + "],height:" + height);
 
         Size cameraResolution = new Size(width, height);
         CameraSelector cameraSelector = new CameraSelector.Builder().requireLensFacing(lensFacing).build();
@@ -78,9 +77,11 @@ public class CameraX {
             buffers[i].position(0);
         }
 
-        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder().setOutputImageFormat(
-                ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888).setTargetResolution(cameraResolution)
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build();
+        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+            .setTargetResolution(cameraResolution)
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build();
         imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(activity.getApplicationContext()), imageAnalyzer);
 
         cameraProvider.unbindAll();
@@ -90,6 +91,7 @@ public class CameraX {
     private ImageAnalysis.Analyzer imageAnalyzer = new ImageAnalysis.Analyzer() {
         @Override
         public void analyze(@NonNull ImageProxy image) {
+//            Timber.d("analyze() called with: width = [" + image.getWidth() + "],height:" + image.getHeight() + ",getFormat:"+ image.getFormat());
             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
             buffer.rewind();
             buffers[currentBuffer].put(buffer);

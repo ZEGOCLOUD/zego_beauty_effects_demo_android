@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
+import timber.log.Timber;
 
 public class ZEGOLiveStreamingManager {
 
@@ -271,6 +272,7 @@ public class ZEGOLiveStreamingManager {
     }
 
     public void enableCustomVideoCapture(boolean enable) {
+        Timber.d("enableCustomVideoCapture() called with: enable = [" + enable + "]");
         ZegoCustomVideoCaptureConfig videoCaptureConfig = new ZegoCustomVideoCaptureConfig();
         videoCaptureConfig.bufferType = ZegoVideoBufferType.RAW_DATA;
         ZEGOSDKManager.getInstance().expressService.enableCustomVideoCapture(enable, videoCaptureConfig,

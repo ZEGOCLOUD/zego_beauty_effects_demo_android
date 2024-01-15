@@ -40,6 +40,8 @@ import im.zego.zegoexpress.callback.IZegoRoomLoginCallback;
 import im.zego.zegoexpress.constants.ZegoPublisherState;
 import im.zego.zegoexpress.constants.ZegoRoomStateChangedReason;
 import im.zego.zegoexpress.constants.ZegoScenario;
+import im.zego.zegoexpress.constants.ZegoVideoConfigPreset;
+import im.zego.zegoexpress.entity.ZegoVideoConfig;
 import im.zego.zim.ZIM;
 import im.zego.zim.callback.ZIMLoggedInCallback;
 import im.zego.zim.callback.ZIMRoomEnteredCallback;
@@ -157,6 +159,9 @@ public class LiveStreamingActivity extends AppCompatActivity {
         if (isHost) {
             ZEGOLiveStreamingManager.getInstance().startPublishingStream();
         }
+
+        ZegoVideoConfig videoConfig = new ZegoVideoConfig(ZegoVideoConfigPreset.PRESET_360P);
+        ZEGOSDKManager.getInstance().expressService.setVideoConfig(videoConfig);
 
         ZEGOSDKManager.getInstance().expressService.startSoundLevelMonitor();
 

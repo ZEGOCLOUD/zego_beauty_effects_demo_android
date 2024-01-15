@@ -19,6 +19,7 @@ import im.zego.zegoexpress.constants.ZegoVideoMirrorMode;
 import im.zego.zegoexpress.entity.ZegoVideoFrameParam;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import timber.log.Timber;
 
 public class DeepARService {
 
@@ -120,26 +121,28 @@ public class DeepARService {
         deepAR.initialize(activity, arEventListener);
         deepAR.changeLiveMode(true);
 
-        // portrait
-        CameraResolutionPreset cameraResolutionPreset = cameraX.getCameraResolutionPreset();
-        deepAR.setOffscreenRendering(cameraResolutionPreset.getHeight(), cameraResolutionPreset.getWidth(),
-            DeepARPixelFormat.RGBA_8888);
-
-        cameraX.setupCamera(activity);
         cameraX.setCallback(new CameraCallback() {
             @Override
             public void analyzeImage(ByteBuffer buffer, int width, int height, int orientation, boolean mirror,
                 DeepARImageFormat imageFormat, int pixelStride) {
+//                Timber.d("analyzeImage() called with: buffer = [" + buffer + "], width = [" + width + "], height = ["
+//                    + height + "], orientation = [" + orientation + "], mirror = [" + mirror + "], imageFormat = ["
+//                    + imageFormat + "], pixelStride = [" + pixelStride + "]");
                 if (deepAR != null) {
                     deepAR.receiveFrame(buffer, width, height, orientation, mirror, imageFormat, pixelStride);
                 }
             }
         });
 
+        // portrait
+        CameraResolutionPreset cameraResolutionPreset = cameraX.getCameraResolutionPreset();
+        deepAR.setOffscreenRendering(cameraResolutionPreset.getHeight(), cameraResolutionPreset.getWidth(),
+            DeepARPixelFormat.RGBA_8888);
+
         initializeFilters();
 
-        ZEGOSDKManager.getInstance().expressService.setVideoMirrorMode(ZegoVideoMirrorMode.NO_MIRROR,
-            ZegoPublishChannel.MAIN);
+        ZEGOSDKManager.getInstance().expressService.setVideoMirrorMode(ZegoVideoMirrorMode.NO_MIRROR, ZegoPublishChannel.MAIN);
+
         ZEGOLiveStreamingManager.getInstance().enableCustomVideoCapture(true);
         ZEGOLiveStreamingManager.getInstance().setCustomVideoCaptureHandler(new IZegoCustomVideoCaptureHandler() {
             @Override
@@ -212,6 +215,7 @@ public class DeepARService {
     }
 
     public void release() {
+        Timber.d("release() called");
         cameraX.release();
         if (deepAR == null) {
             return;
@@ -229,10 +233,10 @@ public class DeepARService {
         if (image != null) {
             int imageRealWidth = image.getWidth();
             int imageRealHeight = image.getHeight();
-            //            Timber.d("frameAvailable() called with: " + "image.getWidth() = [" + imageRealWidth + "], "
-            //                + "image.getHeight() = [" + imageRealHeight + "], " + "image.getFormat() = [" + image.getFormat()
-            //                + "], " + "image.getTimestamp() = [" + image.getTimestamp() + "], " + "image.getCropRect() = ["
-            //                + image.getCropRect() + "]");
+//            Timber.d("onFrameAvailable() called with: " + "image.getWidth() = [" + imageRealWidth + "], "
+//                + "image.getHeight() = [" + imageRealHeight + "], " + "image.getFormat() = [" + image.getFormat()
+//                + "], " + "image.getTimestamp() = [" + image.getTimestamp() + "], " + "image.getCropRect() = ["
+//                + image.getCropRect() + "]");
             final Image.Plane[] planes = image.getPlanes();
             final ByteBuffer frameBuffer = planes[0].getBuffer();
 
