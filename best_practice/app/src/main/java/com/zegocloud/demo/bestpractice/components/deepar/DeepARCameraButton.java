@@ -6,6 +6,7 @@ import android.util.AttributeSet;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.zegocloud.demo.bestpractice.R;
+import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.components.express.ToggleCameraButton;
 
 public class DeepARCameraButton extends ToggleCameraButton {
@@ -32,7 +33,7 @@ public class DeepARCameraButton extends ToggleCameraButton {
     public void open() {
         super.open();
         if (getContext() instanceof Activity) {
-            DeepARService.getInstance().openCamera((Activity) getContext());
+            ZEGOLiveStreamingManager.getInstance().openCamera((Activity) getContext());
         }
     }
 
@@ -40,7 +41,7 @@ public class DeepARCameraButton extends ToggleCameraButton {
     public void close() {
         super.close();
         if (getContext() instanceof Activity) {
-            DeepARService.getInstance().closeCamera();
+            ZEGOLiveStreamingManager.getInstance().closeCamera();
         }
     }
 }
