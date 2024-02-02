@@ -4,9 +4,10 @@ import android.Manifest.permission;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageManager;
+import android.graphics.PixelFormat;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -22,7 +23,6 @@ import com.zegocloud.demo.bestpractice.R;
 import com.zegocloud.demo.bestpractice.components.deepar.DeepARButton;
 import com.zegocloud.demo.bestpractice.components.deepar.DeepARService;
 import com.zegocloud.demo.bestpractice.databinding.ActivityLiveStreamingBinding;
-import com.zegocloud.demo.bestpractice.internal.ZEGOCallInvitationManager;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
 import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager.LiveStreamingListener;
 import com.zegocloud.demo.bestpractice.internal.business.RoomRequestExtendedData;
@@ -36,11 +36,16 @@ import com.zegocloud.demo.bestpractice.internal.sdk.express.IExpressEngineEventH
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.IZIMEventHandler;
 import com.zegocloud.demo.bestpractice.internal.utils.ToastUtil;
 import com.zegocloud.demo.bestpractice.internal.utils.Utils;
+import im.zego.zegoexpress.ZegoMediaPlayer;
+import im.zego.zegoexpress.callback.IZegoMediaPlayerEventHandler;
+import im.zego.zegoexpress.callback.IZegoMediaPlayerLoadResourceCallback;
 import im.zego.zegoexpress.callback.IZegoRoomLoginCallback;
+import im.zego.zegoexpress.constants.ZegoMediaPlayerState;
 import im.zego.zegoexpress.constants.ZegoPublisherState;
 import im.zego.zegoexpress.constants.ZegoRoomStateChangedReason;
 import im.zego.zegoexpress.constants.ZegoScenario;
 import im.zego.zegoexpress.constants.ZegoVideoConfigPreset;
+import im.zego.zegoexpress.entity.ZegoCanvas;
 import im.zego.zegoexpress.entity.ZegoVideoConfig;
 import im.zego.zim.ZIM;
 import im.zego.zim.callback.ZIMLoggedInCallback;
@@ -64,6 +69,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
     //    private AlertDialog inviteCoHostDialog;
     private AlertDialog zimReconnectDialog;
     private DeepARButton deepARButton;
+    private SurfaceView mediaPlayerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +84,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
 
         binding.liveAudioroomTopbar.setRoomID(liveID);
 
-        ZEGOLiveStreamingManager.getInstance().addRoomListeners();
+        ZEGOLiveStreamingManager.getInstance().addListenersForUserJoinRoom();
         DeepARService deepARService = DeepARService.getInstance();
         deepARService.initializeDeepAR(this);
 
@@ -108,6 +114,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
             }
         });
         binding.liveBottomMenuBar.addChildSubView(deepARButton);
+        ZEGOLiveStreamingManager.getInstance().addListenersForUserJoinRoom();
 
         listenSDKEvent();
 
@@ -168,37 +175,63 @@ public class LiveStreamingActivity extends AppCompatActivity {
         int width = binding.getRoot().getWidth() / 4;
         binding.mainHostVideoIcon.setCircleBackgroundRadius(width);
 
-        //        ZEGOLiveStreamingManager.getInstance().setMixLayoutProvider(new MixLayoutProvider() {
-        //            @Override
-        //            public ArrayList<ZegoMixerInput> getMixVideoInputs(List<String> streamList,
-        //                ZegoMixerVideoConfig videoConfig) {
-        //                ArrayList<ZegoMixerInput> inputList = new ArrayList<>();
-        //                if (streamList.size() < 4) {
-        //                    for (int i = 0; i < streamList.size(); i++) {
-        //                        int left = (videoConfig.width / streamList.size()) * i;
-        //                        int top = 0;
-        //                        int right = (videoConfig.width / streamList.size()) * (i + 1);
-        //                        int bottom = videoConfig.height;
-        //                        ZegoMixerInput input_1 = new ZegoMixerInput(streamList.get(i), ZegoMixerInputContentType.VIDEO,
-        //                            new Rect(left, top, right, bottom));
-        //                        input_1.renderMode = ZegoMixRenderMode.FILL;
-        //                        inputList.add(input_1);
-        //                    }
-        //                } else if (streamList.size() == 4) {
-        //                    for (int i = 0; i < streamList.size(); i++) {
-        //                        int left = (videoConfig.width / 2) * (i % 2);
-        //                        int top = (videoConfig.height / 2) * (i < 2 ? 0 : 1);
-        //                        int right = left + videoConfig.width / 2;
-        //                        int bottom = top + videoConfig.height / 2;
-        //                        ZegoMixerInput input_1 = new ZegoMixerInput(streamList.get(i), ZegoMixerInputContentType.VIDEO,
-        //                            new Rect(left, top, right, bottom));
-        //                        input_1.renderMode = ZegoMixRenderMode.FILL;
-        //                        inputList.add(input_1);
-        //                    }
-        //                }
-        //                return inputList;
-        //            }
-        //        });
+        preparGiftView();
+    }
+
+    private void preparGiftView() {
+        ZegoMediaPlayer mediaPlayer = ZEGOSDKManager.getInstance().expressService.getMediaPlayer();
+        mediaPlayerView = new SurfaceView(this);
+        mediaPlayerView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+        mediaPlayerView.setZOrderOnTop(true);
+
+        ZegoCanvas canvas = new ZegoCanvas(mediaPlayerView);
+        canvas.alphaBlend = true;
+        mediaPlayer.setPlayerCanvas(canvas);
+
+        String giftUrl = "https://storage.zego.im/sdk-doc/Pics/zegocloud/gift/music_box.mp4";
+        ZEGOSDKManager.getInstance().expressService.loadResourceFile(giftUrl,
+            new IZegoMediaPlayerLoadResourceCallback() {
+                @Override
+                public void onLoadResourceCallback(int errorCode) {
+                    // load success first ,and then can display gift animation
+                }
+            });
+
+        ZEGOSDKManager.getInstance().expressService.setMediaPlayerEventHandler(new IZegoMediaPlayerEventHandler() {
+
+            @Override
+            public void onMediaPlayerStateUpdate(ZegoMediaPlayer mediaPlayer, ZegoMediaPlayerState state,
+                int errorCode) {
+                super.onMediaPlayerStateUpdate(mediaPlayer, state, errorCode);
+                if (state == ZegoMediaPlayerState.PLAY_ENDED) {
+                    binding.giftParent.removeView(mediaPlayerView);
+                }
+            }
+        });
+
+        ZEGOSDKManager.getInstance().zimService.addEventHandler(new IZIMEventHandler() {
+            @Override
+            public void onRoomCommandReceived(String senderID, String command) {
+                super.onRoomCommandReceived(senderID, command);
+                if (command.contains("gift_type")) {
+                    if (mediaPlayerView.getParent() == null) {
+                        binding.giftParent.addView(mediaPlayerView);
+                        mediaPlayer.start();
+                    }
+                }
+            }
+
+            @Override
+            public void onSendRoomCommand(int errorCode, String errorMessage, String command) {
+                super.onSendRoomCommand(errorCode, errorMessage, command);
+                if (errorCode == 0 && command.contains("gift_type")) {
+                    if (mediaPlayerView.getParent() == null) {
+                        binding.giftParent.addView(mediaPlayerView);
+                        mediaPlayer.start();
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -206,6 +239,7 @@ public class LiveStreamingActivity extends AppCompatActivity {
         super.onPause();
         if (isFinishing()) {
             DeepARService.getInstance().release();
+            ZEGOSDKManager.getInstance().expressService.setMediaPlayerEventHandler(null);
             ZEGOLiveStreamingManager.getInstance().leave();
         }
     }

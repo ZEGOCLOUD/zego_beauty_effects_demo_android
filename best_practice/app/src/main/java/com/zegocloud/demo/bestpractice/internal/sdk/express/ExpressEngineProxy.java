@@ -2,6 +2,7 @@ package com.zegocloud.demo.bestpractice.internal.sdk.express;
 
 import android.app.Application;
 import im.zego.zegoexpress.ZegoExpressEngine;
+import im.zego.zegoexpress.ZegoMediaPlayer;
 import im.zego.zegoexpress.callback.IZegoCustomVideoCaptureHandler;
 import im.zego.zegoexpress.callback.IZegoCustomVideoProcessHandler;
 import im.zego.zegoexpress.callback.IZegoEventHandler;
@@ -240,5 +241,9 @@ class ExpressEngineProxy {
 
     public void setVideoMirrorMode(ZegoVideoMirrorMode mirrorMode, ZegoPublishChannel channel) {
         ZegoExpressEngine.getEngine().setVideoMirrorMode(mirrorMode, channel);
+    }
+
+    public ZegoMediaPlayer createMediaPlayer() {
+        return ZegoExpressEngine.getEngine().createMediaPlayer();
     }
 }
