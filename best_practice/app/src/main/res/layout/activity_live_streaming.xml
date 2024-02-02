@@ -66,6 +66,12 @@
     android:visibility="gone"
     app:layout_constraintBottom_toBottomOf="parent" />
 
+  <com.faceunity.nama.ui.FaceUnityView
+    android:id="@+id/faceUnityView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:layout_constraintBottom_toTopOf="@+id/live_bottom_menu_bar"/>
+
   <androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"

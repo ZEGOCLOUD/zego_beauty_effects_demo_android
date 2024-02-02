@@ -11,6 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
+import com.faceunity.nama.FURenderer;
+import com.faceunity.nama.data.FaceUnityDataFactory;
 import com.permissionx.guolindev.PermissionX;
 import com.permissionx.guolindev.callback.RequestCallback;
 import com.zegocloud.demo.bestpractice.R;
@@ -70,6 +72,10 @@ public class CallInvitationActivity extends AppCompatActivity {
             }
         });
         listenSDKEvent();
+
+        FaceUnityDataFactory mFaceUnityDataFactory = FURenderer.getInstance().getFaceUnityDataFactory();
+        binding.faceUnityView.bindDataFactory(mFaceUnityDataFactory);
+
     }
 
     @Override

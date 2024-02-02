@@ -23,6 +23,34 @@ Now,you can build and run project
 
 
 
+## How to Integrate FaceUnity SDK with ZEGO
 
+Assume that you have already get FaceUnity authpack.java and add faceunity dependence.
+
+
+1.  File - import module - choose source directory - select `faceunity` module in the demo.
+2.  Add `com.zegocloud.demo.bestpractice.faceunity.FaceUnityVideoProcess` to your project.
+3.  Init FaceUnity SDK after you signed in,and enable CustomVideoProcessing for ZEGO SDK before
+publish any streams.
+
+    ```java
+    public void initFaceUnity(){
+        FURenderer.getInstance().setup(this);
+        ZegoCustomVideoProcessConfig config = new ZegoCustomVideoProcessConfig();
+        config.bufferType = ZegoVideoBufferType.GL_TEXTURE_2D;
+        ZEGOSDKManager.getInstance().expressService.enableCustomVideoProcessing(true, config, ZegoPublishChannel.MAIN);
+
+        FaceUnityVideoProcess faceUnityVideoProcess = new FaceUnityVideoProcess();
+        ZEGOSDKManager.getInstance().expressService.setCustomVideoProcessHandler(faceUnityVideoProcess);
+    }
+    ```
+1. Add `com.faceunity.nama.ui.FaceUnityView` to any layout xml files to show FaceUnity beauty widget.
+   
+2. Bind `FaceUnityView` to FaceUnity SDK:
+    ```java
+    FaceUnityDataFactory mFaceUnityDataFactory = FURenderer.getInstance().getFaceUnityDataFactory();
+    binding.faceUnityView.bindDataFactory(mFaceUnityDataFactory);
+    ```
+3. Now you can click `FaceUnityView` widget to change Beauty effects
 
 

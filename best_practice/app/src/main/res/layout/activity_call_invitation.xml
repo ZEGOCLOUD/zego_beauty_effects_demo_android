@@ -56,6 +56,12 @@
     app:layout_constraintHorizontal_bias="0.5"
     app:layout_constraintStart_toEndOf="@+id/call_mic_btn" />
 
+  <com.faceunity.nama.ui.FaceUnityView
+    android:id="@+id/faceUnityView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:layout_constraintBottom_toTopOf="@+id/call_hangup_btn"/>
+
 
   <com.zegocloud.demo.bestpractice.internal.sdk.components.express.SwitchCameraButton
     android:id="@+id/call_camera_switch_btn"
