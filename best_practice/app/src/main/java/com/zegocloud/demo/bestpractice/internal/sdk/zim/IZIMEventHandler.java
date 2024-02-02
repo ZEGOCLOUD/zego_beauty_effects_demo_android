@@ -68,11 +68,7 @@ public abstract class IZIMEventHandler extends ZIMEventHandler {
 
     }
 
-    public void onUserAvatarUpdated(String userID, String url) {
-    }
-
-
-    public void onSendRoomCommand(int errorCode, String command) {
+    public void onSendRoomCommand(int errorCode, String errorMessage, String command) {
 
     }
 

@@ -1,7 +1,6 @@
 package com.zegocloud.demo.bestpractice.activity;
 
 import android.Manifest.permission;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -15,32 +14,25 @@ import com.zegocloud.demo.bestpractice.R;
 import com.zegocloud.demo.bestpractice.databinding.ActivityCallWaitBinding;
 import com.zegocloud.demo.bestpractice.internal.ZEGOCallInvitationManager;
 import com.zegocloud.demo.bestpractice.internal.business.UserRequestCallback;
-import com.zegocloud.demo.bestpractice.internal.business.call.FullCallInfo;
+import com.zegocloud.demo.bestpractice.internal.business.call.CallChangedListener;
+import com.zegocloud.demo.bestpractice.internal.business.call.CallInviteInfo;
+import com.zegocloud.demo.bestpractice.internal.business.call.CallInviteUser;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
-import com.zegocloud.demo.bestpractice.internal.sdk.zim.IZIMEventHandler;
-import com.zegocloud.demo.bestpractice.internal.utils.LogUtil;
+import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
 import com.zegocloud.demo.bestpractice.internal.utils.ToastUtil;
-import im.zego.zegoexpress.callback.IZegoRoomLoginCallback;
-import im.zego.zegoexpress.constants.ZegoScenario;
-import im.zego.zim.entity.ZIMCallInvitationCancelledInfo;
-import im.zego.zim.entity.ZIMCallInvitationTimeoutInfo;
+import im.zego.zim.entity.ZIMUserFullInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.json.JSONObject;
+import java.util.Objects;
+import timber.log.Timber;
 
 public class CallWaitActivity extends AppCompatActivity {
 
     private ActivityCallWaitBinding binding;
-    private FullCallInfo callInfo;
-    private IZIMEventHandler zimEventHandler;
-
-    public static void startActivity(Context context, FullCallInfo fullCallInfo) {
-        Intent intent = new Intent(context, CallWaitActivity.class);
-        intent.putExtra("callInfo", fullCallInfo.toString());
-        context.startActivity(intent);
-    }
+    private CallChangedListener listener;
+    private CallInviteInfo callInviteInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,23 +41,39 @@ public class CallWaitActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         getSupportActionBar().setTitle("CallWaitActivity");
-        callInfo = FullCallInfo.parse(getIntent().getStringExtra("callInfo"));
-        LogUtil.d("onCreate: " + callInfo);
+        callInviteInfo = ZEGOCallInvitationManager.getInstance().getCallInviteInfo();
 
-        if (callInfo.isOutgoingCall) {
+        if (callInviteInfo.isOutgoingCall) {
             binding.incomingCallAcceptButton.setVisibility(View.GONE);
             binding.incomingCallRejectButton.setVisibility(View.GONE);
             binding.outgoingCallCancelButton.setVisibility(View.VISIBLE);
-            binding.waitingIcon.setLetter(callInfo.calleeUserID);
+
+            CallInviteUser inviteUser = callInviteInfo.userList.get(0);
+            ZEGOSDKUser currentUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
+            if (Objects.equals(inviteUser.getUserID(), currentUser.userID)) {
+                inviteUser = callInviteInfo.userList.get(1);
+            }
+            ZIMUserFullInfo zimUserFullInfo = ZEGOSDKManager.getInstance().zimService.getUserInfo(
+                inviteUser.getUserID());
+            if (zimUserFullInfo != null) {
+                binding.waitingIcon.setLetter(zimUserFullInfo.baseInfo.userName);
+                binding.waitingIcon.setIconUrl(zimUserFullInfo.userAvatarUrl);
+            }
         } else {
             binding.incomingCallAcceptButton.setVisibility(View.VISIBLE);
             binding.incomingCallRejectButton.setVisibility(View.VISIBLE);
             binding.outgoingCallCancelButton.setVisibility(View.GONE);
-            binding.waitingIcon.setLetter(callInfo.callerUserName);
+
+            String inviter = callInviteInfo.inviter;
+            ZIMUserFullInfo zimUserFullInfo = ZEGOSDKManager.getInstance().zimService.getUserInfo(inviter);
+            if (zimUserFullInfo != null) {
+                binding.waitingIcon.setLetter(zimUserFullInfo.baseInfo.userName);
+                binding.waitingIcon.setIconUrl(zimUserFullInfo.userAvatarUrl);
+            }
         }
 
         List<String> permissions;
-        if (callInfo.isVideoCall()) {
+        if (callInviteInfo.isVideoCall()) {
             permissions = Arrays.asList(permission.CAMERA, permission.RECORD_AUDIO);
         } else {
             permissions = Collections.singletonList(permission.RECORD_AUDIO);
@@ -81,121 +89,89 @@ public class CallWaitActivity extends AppCompatActivity {
             }
         });
 
-        if (callInfo.isVideoCall()) {
+        if (callInviteInfo.isVideoCall()) {
             binding.incomingCallAcceptButton.setImageResource(R.drawable.call_icon_video_accept);
         } else {
             binding.incomingCallAcceptButton.setImageResource(R.drawable.call_icon_voice_accept);
         }
 
         binding.incomingCallAcceptButton.setOnClickListener(v -> {
-            ZEGOCallInvitationManager.getInstance().acceptCallRequest(callInfo.callID, new UserRequestCallback() {
-                @Override
-                public void onUserRequestSend(int errorCode, String requestID) {
-                    if (errorCode == 0) {
-                        if (callInfo.isVideoCall()) {
-                            ZEGOSDKManager.getInstance().expressService.setRoomScenario(
-                                ZegoScenario.STANDARD_VIDEO_CALL);
-                        } else {
-                            ZEGOSDKManager.getInstance().expressService.setRoomScenario(
-                                ZegoScenario.STANDARD_VOICE_CALL);
-                        }
-                        ZEGOSDKManager.getInstance().expressService.loginRoom(callInfo.callID,
-                            new IZegoRoomLoginCallback() {
-                                @Override
-                                public void onRoomLoginResult(int errorCode, JSONObject extendedData) {
-                                    if (errorCode == 0) {
-                                        CallInvitationActivity.startActivity(CallWaitActivity.this, callInfo);
-                                    } else {
-                                        ToastUtil.show(CallWaitActivity.this, "joinExpressRoom failed :" + errorCode);
-                                    }
-                                    finish();
-                                }
-                            });
-                    } else {
-                        ToastUtil.show(CallWaitActivity.this, "send invite failed :" + errorCode);
-                    }
-                }
-            });
-        });
-        binding.incomingCallRejectButton.setOnClickListener(v -> {
-            ZEGOCallInvitationManager.getInstance().rejectCallRequest(callInfo.callID, new UserRequestCallback() {
-                @Override
-                public void onUserRequestSend(int errorCode, String requestID) {
-                    if (errorCode == 0) {
-                        finish();
-                    } else {
-                        ToastUtil.show(CallWaitActivity.this, "send reject failed :" + errorCode);
-                    }
-                }
-            });
-        });
-
-        binding.outgoingCallCancelButton.setOnClickListener(v -> {
             ZEGOCallInvitationManager.getInstance()
-                .cancelCallRequest(callInfo.callID, callInfo.calleeUserID, new UserRequestCallback() {
+                .acceptCallRequest(callInviteInfo.requestID, new UserRequestCallback() {
                     @Override
                     public void onUserRequestSend(int errorCode, String requestID) {
                         if (errorCode == 0) {
+                            Intent intent = new Intent(CallWaitActivity.this, CallInvitationActivity.class);
+                            startActivity(intent);
                             finish();
                         } else {
-                            ToastUtil.show(CallWaitActivity.this, "send reject failed :" + errorCode);
+                            ToastUtil.show(CallWaitActivity.this, "send invite failed :" + errorCode);
                         }
                     }
                 });
         });
-
-        zimEventHandler = new IZIMEventHandler() {
-
-            @Override
-            public void onInComingUserRequestTimeout(String requestID, ZIMCallInvitationTimeoutInfo info) {
-                if (requestID.equals(callInfo.callID)) {
-                    finish();
-                }
-            }
-
-            @Override
-            public void onInComingUserRequestCancelled(String requestID, ZIMCallInvitationCancelledInfo info) {
-                if (requestID.equals(callInfo.callID)) {
-                    finish();
-                }
-            }
-
-            @Override
-            public void onOutgoingUserRequestTimeout(String requestID) {
-                if (requestID.equals(callInfo.callID)) {
-                    finish();
-                }
-            }
-
-            @Override
-            public void onOutgoingUserRequestAccepted(String requestID, String invitee, String extendedData) {
-                if (requestID.equals(callInfo.callID)) {
-                    if (callInfo.isVideoCall()) {
-                        ZEGOSDKManager.getInstance().expressService.setRoomScenario(ZegoScenario.STANDARD_VIDEO_CALL);
-                    } else {
-                        ZEGOSDKManager.getInstance().expressService.setRoomScenario(ZegoScenario.STANDARD_VOICE_CALL);
+        binding.incomingCallRejectButton.setOnClickListener(v -> {
+            ZEGOCallInvitationManager.getInstance()
+                .rejectCallRequest(callInviteInfo.requestID, new UserRequestCallback() {
+                    @Override
+                    public void onUserRequestSend(int errorCode, String requestID) {
+                        if (errorCode != 0) {
+                            ToastUtil.show(CallWaitActivity.this, "send reject failed :" + errorCode);
+                        }
+                        finish();
                     }
-                    ZEGOSDKManager.getInstance().expressService.loginRoom(callInfo.callID,
-                        new IZegoRoomLoginCallback() {
-                            @Override
-                            public void onRoomLoginResult(int errorCode, JSONObject extendedData) {
-                                if (errorCode == 0) {
-                                    finish();
-                                    CallInvitationActivity.startActivity(CallWaitActivity.this, callInfo);
-                                }
-                            }
-                        });
+                });
+        });
+
+        binding.outgoingCallCancelButton.setOnClickListener(v -> {
+            ZEGOCallInvitationManager.getInstance().endCallRequest(callInviteInfo.requestID, new UserRequestCallback() {
+                @Override
+                public void onUserRequestSend(int errorCode, String requestID) {
+                    if (errorCode != 0) {
+                        ToastUtil.show(CallWaitActivity.this, "end call failed :" + errorCode);
+                    }
+                    finish();
+
+                }
+            });
+        });
+
+        listener = new CallChangedListener() {
+            @Override
+            public void onCallEnded(String requestID) {
+                if (requestID.equals(callInviteInfo.requestID)) {
+                    finish();
                 }
             }
 
             @Override
-            public void onOutgoingUserRequestRejected(String requestID, String invitee, String extendedData) {
-                if (requestID.equals(callInfo.callID)) {
+            public void onCallCancelled(String requestID) {
+                if (requestID.equals(callInviteInfo.requestID)) {
+                    finish();
+                }
+            }
+
+            @Override
+            public void onCallTimeout(String requestID) {
+                if (requestID.equals(callInviteInfo.requestID)) {
+                    finish();
+                }
+            }
+
+            @Override
+            public void onInvitedUserAccepted(String requestID, CallInviteUser acceptUser) {
+                ZEGOSDKUser currentUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
+                if (Objects.equals(acceptUser.getUserID(), currentUser.userID)) {
+                    return;
+                }
+                if (requestID.equals(callInviteInfo.requestID)) {
+                    Intent intent = new Intent(CallWaitActivity.this, CallInvitationActivity.class);
+                    startActivity(intent);
                     finish();
                 }
             }
         };
-        ZEGOSDKManager.getInstance().zimService.addEventHandler(zimEventHandler);
+        ZEGOCallInvitationManager.getInstance().addCallListener(listener);
     }
 
     @Override
@@ -207,7 +183,7 @@ public class CallWaitActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if (isFinishing()) {
-            ZEGOSDKManager.getInstance().zimService.removeEventHandler(zimEventHandler);
+            ZEGOCallInvitationManager.getInstance().removeCallListener(listener);
             ZEGOSDKManager.getInstance().expressService.openCamera(false);
             ZEGOSDKManager.getInstance().expressService.stopPreview();
         }

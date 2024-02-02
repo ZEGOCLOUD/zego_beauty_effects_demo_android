@@ -12,12 +12,9 @@ import androidx.core.content.ContextCompat;
 import com.permissionx.guolindev.PermissionX;
 import com.permissionx.guolindev.callback.RequestCallback;
 import com.zegocloud.demo.bestpractice.R;
-import com.zegocloud.demo.bestpractice.components.call.CallBackgroundService;
 import com.zegocloud.demo.bestpractice.databinding.ActivityMainBinding;
-import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
 import com.zegocloud.demo.bestpractice.internal.ZEGOCallInvitationManager;
-import com.zegocloud.demo.bestpractice.internal.business.call.CallExtendedData;
-import com.zegocloud.demo.bestpractice.internal.business.call.FullCallInfo;
+import com.zegocloud.demo.bestpractice.internal.ZEGOLiveStreamingManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
 import im.zego.zim.callback.ZIMCallInvitationSentCallback;
@@ -42,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         binding.liveUserinfoUserid.setText(localUser.userID);
         binding.liveUserinfoUsername.setText(localUser.userName);
 
+//        binding.liveIdStreaming.getEditText().setText(Build.MANUFACTURER.toLowerCase());
         binding.startLiveStreaming.setOnClickListener(v -> {
             String liveID = binding.liveIdStreaming.getEditText().getText().toString();
             if (TextUtils.isEmpty(liveID)) {
@@ -108,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        binding.callUserId.getEditText().setText("samsung");
         binding.callUserVideo.setOnClickListener(v -> {
             String targetUserID = binding.callUserId.getEditText().getText().toString();
             if (TextUtils.isEmpty(targetUserID)) {
@@ -120,21 +119,19 @@ public class MainActivity extends AppCompatActivity {
                 public void onResult(boolean allGranted, @NonNull List<String> grantedList,
                     @NonNull List<String> deniedList) {
                     if (allGranted) {
-                        ZEGOCallInvitationManager.getInstance()
-                            .sendVideoCall(targetUserID, new ZIMCallInvitationSentCallback() {
+                        String[] split = targetUserID.split(",");
+                        ZEGOCallInvitationManager.getInstance().inviteVideoCall(Arrays.asList(split), new ZIMCallInvitationSentCallback() {
                                 @Override
                                 public void onCallInvitationSent(String requestID, ZIMCallInvitationSentInfo info,
                                     ZIMError errorInfo) {
                                     if (errorInfo.code.value() == 0) {
-                                        ZEGOSDKUser localUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
-                                        FullCallInfo fullCallInfo = new FullCallInfo();
-                                        fullCallInfo.callID = requestID;
-                                        fullCallInfo.callType = CallExtendedData.VIDEO_CALL;
-                                        fullCallInfo.callerUserID = localUser.userID;
-                                        fullCallInfo.callerUserName = localUser.userName;
-                                        fullCallInfo.calleeUserID = targetUserID;
-                                        fullCallInfo.isOutgoingCall = true;
-                                        CallWaitActivity.startActivity(MainActivity.this, fullCallInfo);
+                                        if (split.length > 1) {
+                                            Intent intent = new Intent(MainActivity.this, CallInvitationActivity.class);
+                                            startActivity(intent);
+                                        } else {
+                                            Intent intent = new Intent(MainActivity.this, CallWaitActivity.class);
+                                            startActivity(intent);
+                                        }
                                     }
                                 }
                             });
@@ -155,21 +152,19 @@ public class MainActivity extends AppCompatActivity {
                 public void onResult(boolean allGranted, @NonNull List<String> grantedList,
                     @NonNull List<String> deniedList) {
                     if (allGranted) {
-                        ZEGOCallInvitationManager.getInstance()
-                            .sendVoiceCall(targetUserID, new ZIMCallInvitationSentCallback() {
+                        String[] split = targetUserID.split(",");
+                        ZEGOCallInvitationManager.getInstance().inviteVoiceCall(Arrays.asList(split), new ZIMCallInvitationSentCallback() {
                                 @Override
                                 public void onCallInvitationSent(String requestID, ZIMCallInvitationSentInfo info,
                                     ZIMError errorInfo) {
                                     if (errorInfo.code.value() == 0) {
-                                        ZEGOSDKUser localUser = ZEGOSDKManager.getInstance().expressService.getCurrentUser();
-                                        FullCallInfo fullCallInfo = new FullCallInfo();
-                                        fullCallInfo.callID = requestID;
-                                        fullCallInfo.callType = CallExtendedData.VOICE_CALL;
-                                        fullCallInfo.callerUserID = localUser.userID;
-                                        fullCallInfo.callerUserName = localUser.userName;
-                                        fullCallInfo.calleeUserID = targetUserID;
-                                        fullCallInfo.isOutgoingCall = true;
-                                        CallWaitActivity.startActivity(MainActivity.this, fullCallInfo);
+                                        if (split.length > 1) {
+                                            Intent intent = new Intent(MainActivity.this, CallInvitationActivity.class);
+                                            startActivity(intent);
+                                        } else {
+                                            Intent intent = new Intent(MainActivity.this, CallWaitActivity.class);
+                                            startActivity(intent);
+                                        }
                                     }
                                 }
                             });
@@ -178,12 +173,10 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
-        // if LiveStreaming,init after user login,may receive pk request.
+        // if LiveStreaming,init after user login,can receive pk request.
         ZEGOLiveStreamingManager.getInstance().init();
-        // if Call invitation,init after user login,may receive call request.
-        ZEGOCallInvitationManager.getInstance().init();
-        Intent intent = new Intent(this, CallBackgroundService.class);
-        startService(intent);
+        // if Call invitation,init after user login,can receive call request.
+        ZEGOCallInvitationManager.getInstance().init(this);
     }
 
     protected void onPause() {
@@ -192,11 +185,8 @@ public class MainActivity extends AppCompatActivity {
             ZEGOSDKManager.getInstance().disconnectUser();
             ZEGOLiveStreamingManager.getInstance().removeUserData();
             ZEGOLiveStreamingManager.getInstance().removeUserListeners();
-            // if Call invitation,init after user login,may receive call request.
             ZEGOCallInvitationManager.getInstance().removeUserData();
             ZEGOCallInvitationManager.getInstance().removeUserListeners();
-            Intent intent = new Intent(this, CallBackgroundService.class);
-            stopService(intent);
         }
     }
 

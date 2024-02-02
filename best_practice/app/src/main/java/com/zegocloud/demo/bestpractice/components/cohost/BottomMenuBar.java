@@ -39,6 +39,7 @@ public class BottomMenuBar extends LinearLayout {
     private RoomRequestListDialog roomRequestListDialog;
     private View.OnClickListener beautyButtonClickListener;
     private BeautyButton beautyBtn;
+    private GiftButton giftButton;
 
     public BottomMenuBar(Context context) {
         super(context);
@@ -123,6 +124,9 @@ public class BottomMenuBar extends LinearLayout {
 
         coHostButton = new CoHostButton(getContext());
         childLinearLayout.addView(coHostButton, generateChildTextLayoutParams());
+
+        giftButton = new GiftButton(getContext());
+        childLinearLayout.addView(giftButton, generateChildTextLayoutParams());
 
         // init state
         onUserRoleChanged(Role.AUDIENCE);
@@ -215,6 +219,7 @@ public class BottomMenuBar extends LinearLayout {
 
             beautyBtn.setVisibility(GONE);
 
+            giftButton.setVisibility(VISIBLE);
         } else if (role == Role.CO_HOST) {
             coHostButton.setVisibility(VISIBLE);
             pkButton.setVisibility(GONE);
@@ -227,6 +232,7 @@ public class BottomMenuBar extends LinearLayout {
             if (ZEGOSDKManager.getInstance().effectsService.isEffectSDKInit()) {
                 beautyBtn.setVisibility(VISIBLE);
             }
+            giftButton.setVisibility(GONE);
         } else if (role == Role.HOST) {
             coHostButton.setVisibility(GONE);
             pkButton.setVisibility(VISIBLE);
@@ -239,6 +245,7 @@ public class BottomMenuBar extends LinearLayout {
             if (ZEGOSDKManager.getInstance().effectsService.isEffectSDKInit()) {
                 beautyBtn.setVisibility(VISIBLE);
             }
+            giftButton.setVisibility(GONE);
         }
 
         PKBattleInfo pkBattleInfo = ZEGOLiveStreamingManager.getInstance().getPKBattleInfo();

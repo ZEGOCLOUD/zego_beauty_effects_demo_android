@@ -1,7 +1,6 @@
 package com.zegocloud.demo.bestpractice.internal.sdk.zim;
 
 import android.app.Application;
-import com.zegocloud.demo.bestpractice.internal.utils.LogUtil;
 import im.zego.zim.ZIM;
 import im.zego.zim.callback.ZIMCallAcceptanceSentCallback;
 import im.zego.zim.callback.ZIMCallCancelSentCallback;
@@ -66,9 +65,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
+import timber.log.Timber;
 
 public class ZIMService {
 
@@ -77,10 +79,9 @@ public class ZIMService {
     private ZIMProxy zimProxy = new ZIMProxy();
     private List<IZIMEventHandler> handlerList = new CopyOnWriteArrayList<>();
     private List<IZIMEventHandler> autoDeleteHandlerList = new CopyOnWriteArrayList<>();
-    private Map<String, String> usersAvatarUrlMap = new HashMap<>();
     private Map<String, RoomRequest> roomRequestMap = new HashMap<>();
     private ZIMEventHandler initEventHandler;
-
+    private ArrayList<ZIMUserFullInfo> zimUserInfoList = new ArrayList<>();
 
     public void initSDK(Application application, long appID, String appSign) {
         zimProxy.create(application, appID, appSign);
@@ -91,7 +92,7 @@ public class ZIMService {
             public void onConnectionStateChanged(ZIM zim, ZIMConnectionState state, ZIMConnectionEvent event,
                 JSONObject extendedData) {
                 super.onConnectionStateChanged(zim, state, event, extendedData);
-                LogUtil.d(
+                Timber.d(
                     "onConnectionStateChanged() called with: zim = [" + zim + "], state = [" + state + "], event = ["
                         + event + "], extendedData = [" + extendedData + "]");
             }
@@ -100,7 +101,7 @@ public class ZIMService {
             public void onRoomStateChanged(ZIM zim, ZIMRoomState state, ZIMRoomEvent event, JSONObject extendedData,
                 String roomID) {
                 super.onRoomStateChanged(zim, state, event, extendedData, roomID);
-                LogUtil.d(
+                Timber.d(
                     "onRoomStateChanged() called with: zim = [" + zim + "], state = [" + state + "], event = [" + event
                         + "], extendedData = [" + extendedData + "], roomID = [" + roomID + "]");
             }
@@ -194,11 +195,25 @@ public class ZIMService {
             @Override
             public void onCallInvitationReceived(ZIM zim, ZIMCallInvitationReceivedInfo info, String callID) {
                 super.onCallInvitationReceived(zim, info, callID);
+                Timber.d("onCallInvitationReceived() called with: zim = [" + zim + "], info = [" + info + "], callID = ["
+                        + callID + "]");
                 for (IZIMEventHandler handler : autoDeleteHandlerList) {
                     handler.onInComingUserRequestReceived(callID, info);
                 }
                 for (IZIMEventHandler handler : handlerList) {
                     handler.onInComingUserRequestReceived(callID, info);
+                }
+            }
+
+            @Override
+            public void onUserInfoUpdated(ZIM zim, ZIMUserFullInfo info) {
+                super.onUserInfoUpdated(zim, info);
+                Timber.d("onUserInfoUpdated() called with: zim = [" + zim + "], info = [" + info + "]");
+                for (IZIMEventHandler handler : autoDeleteHandlerList) {
+                    handler.onUserInfoUpdated(zim, info);
+                }
+                for (IZIMEventHandler handler : handlerList) {
+                    handler.onUserInfoUpdated(zim, info);
                 }
             }
 
@@ -480,6 +495,7 @@ public class ZIMService {
     }
 
     public void updateUserAvatarUrl(String url, ZIMUserAvatarUrlUpdatedCallback callback) {
+        Timber.d("updateUserAvatarUrl() called with: url = [" + url + "], callback = [" + callback + "]");
         if (zimProxy.getZIM() == null || currentUser == null) {
             return;
         }
@@ -487,7 +503,20 @@ public class ZIMService {
             @Override
             public void onUserAvatarUrlUpdated(String userAvatarUrl, ZIMError errorInfo) {
                 if (errorInfo.code == ZIMErrorCode.SUCCESS) {
-                    usersAvatarUrlMap.put(currentUser.userID, url);
+                    boolean find = false;
+                    for (ZIMUserFullInfo userFullInfo : zimUserInfoList) {
+                        if (Objects.equals(userFullInfo.baseInfo.userID, currentUser.userID)) {
+                            userFullInfo.userAvatarUrl = userAvatarUrl;
+                            find = true;
+                            break;
+                        }
+                    }
+                    if (!find) {
+                        ZIMUserFullInfo userFullInfo = new ZIMUserFullInfo();
+                        userFullInfo.baseInfo = currentUser;
+                        userFullInfo.userAvatarUrl = userAvatarUrl;
+                        zimUserInfoList.add(userFullInfo);
+                    }
                 }
                 if (callback != null) {
                     callback.onUserAvatarUrlUpdated(userAvatarUrl, errorInfo);
@@ -505,18 +534,22 @@ public class ZIMService {
             @Override
             public void onUsersInfoQueried(ArrayList<ZIMUserFullInfo> userList,
                 ArrayList<ZIMErrorUserInfo> errorUserList, ZIMError errorInfo) {
+                Timber.d(
+                    "onUsersInfoQueried() called with: userList = [" + userList + "], errorUserList = [" + errorUserList
+                        + "], errorInfo = [" + errorInfo + "]");
                 for (ZIMUserFullInfo zimUserFullInfo : userList) {
-                    String userID = zimUserFullInfo.baseInfo.userID;
-                    String beforeValue = usersAvatarUrlMap.get(userID);
-                    usersAvatarUrlMap.put(userID, zimUserFullInfo.userAvatarUrl);
-
-                    if (!zimUserFullInfo.userAvatarUrl.equals(beforeValue)) {
-                        for (IZIMEventHandler handler : autoDeleteHandlerList) {
-                            handler.onUserAvatarUpdated(userID, zimUserFullInfo.userAvatarUrl);
+                    boolean find = false;
+                    for (ZIMUserFullInfo userFullInfo : zimUserInfoList) {
+                        if (Objects.equals(userFullInfo.baseInfo.userID, zimUserFullInfo.baseInfo.userID)) {
+                            userFullInfo.baseInfo.userName = zimUserFullInfo.baseInfo.userName;
+                            userFullInfo.userAvatarUrl = zimUserFullInfo.userAvatarUrl;
+                            userFullInfo.extendedData = zimUserFullInfo.extendedData;
+                            find = true;
+                            break;
                         }
-                        for (IZIMEventHandler handler : handlerList) {
-                            handler.onUserAvatarUpdated(userID, zimUserFullInfo.userAvatarUrl);
-                        }
+                    }
+                    if (!find) {
+                        zimUserInfoList.add(zimUserFullInfo);
                     }
                 }
                 if (callback != null) {
@@ -526,8 +559,24 @@ public class ZIMService {
         });
     }
 
+    @Nullable
     public String getUserAvatar(String userID) {
-        return usersAvatarUrlMap.get(userID);
+        for (ZIMUserFullInfo userFullInfo : zimUserInfoList) {
+            if (Objects.equals(userFullInfo.baseInfo.userID, userID)) {
+                return userFullInfo.userAvatarUrl;
+            }
+        }
+        return null;
+    }
+
+
+    public ZIMUserFullInfo getUserInfo(String userID) {
+        for (ZIMUserFullInfo userFullInfo : zimUserInfoList) {
+            if (Objects.equals(userFullInfo.baseInfo.userID, userID)) {
+                return userFullInfo;
+            }
+        }
+        return null;
     }
 
     public void addEventHandler(IZIMEventHandler zimEventHandler) {
@@ -535,6 +584,9 @@ public class ZIMService {
     }
 
     public void addEventHandler(IZIMEventHandler zimEventHandler, boolean autoDelete) {
+        Timber.d(
+            "addEventHandler() called with: zimEventHandler = [" + zimEventHandler + "], autoDelete = [" + autoDelete
+                + "]");
         if (autoDelete) {
             autoDeleteHandlerList.add(zimEventHandler);
         } else {
@@ -595,7 +647,6 @@ public class ZIMService {
         zimProxy.callCancel(list, requestID, config, callback);
     }
 
-
     public void quitUserRequest(String callID, ZIMCallQuitConfig config, ZIMCallQuitSentCallback callback) {
         if (zimProxy.getZIM() == null || currentUser == null) {
             return;
@@ -627,13 +678,13 @@ public class ZIMService {
                 @Override
                 public void onMessageSent(ZIMMessage message, ZIMError errorInfo) {
                     if (callback != null) {
-                        callback.onSendRoomCommand(errorInfo.code.value(), errorInfo.message);
+                        callback.onSendRoomCommand(errorInfo.code.value(), errorInfo.message,command);
                     }
                     for (IZIMEventHandler handler : autoDeleteHandlerList) {
-                        handler.onSendRoomCommand(errorInfo.code.value(), errorInfo.message);
+                        handler.onSendRoomCommand(errorInfo.code.value(), errorInfo.message,command);
                     }
                     for (IZIMEventHandler handler : handlerList) {
-                        handler.onSendRoomCommand(errorInfo.code.value(), errorInfo.message);
+                        handler.onSendRoomCommand(errorInfo.code.value(), errorInfo.message,command);
                     }
                 }
             });
@@ -874,7 +925,7 @@ public class ZIMService {
 
     public void removeUserData() {
         currentUser = null;
-        usersAvatarUrlMap.clear();
+        zimUserInfoList.clear();
     }
 
     public void removeAutoDeleteRoomListeners() {

@@ -3,24 +3,28 @@ package com.zegocloud.demo.bestpractice.internal.sdk.express;
 import android.app.Application;
 import android.text.TextUtils;
 import android.view.TextureView;
-import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
-import com.zegocloud.demo.bestpractice.internal.utils.LogUtil;
 import im.zego.zegoexpress.ZegoExpressEngine;
+import im.zego.zegoexpress.ZegoMediaPlayer;
 import im.zego.zegoexpress.callback.IZegoCustomVideoProcessHandler;
 import im.zego.zegoexpress.callback.IZegoEventHandler;
 import im.zego.zegoexpress.callback.IZegoIMSendBarrageMessageCallback;
+import im.zego.zegoexpress.callback.IZegoMediaPlayerEventHandler;
+import im.zego.zegoexpress.callback.IZegoMediaPlayerLoadResourceCallback;
 import im.zego.zegoexpress.callback.IZegoMixerStartCallback;
 import im.zego.zegoexpress.callback.IZegoMixerStopCallback;
 import im.zego.zegoexpress.callback.IZegoRoomLoginCallback;
 import im.zego.zegoexpress.callback.IZegoRoomLogoutCallback;
 import im.zego.zegoexpress.callback.IZegoRoomSetRoomExtraInfoCallback;
 import im.zego.zegoexpress.callback.IZegoUploadLogResultCallback;
+import im.zego.zegoexpress.constants.ZegoAlphaLayoutType;
+import im.zego.zegoexpress.constants.ZegoMediaPlayerNetworkEvent;
+import im.zego.zegoexpress.constants.ZegoMediaPlayerState;
+import im.zego.zegoexpress.constants.ZegoMultimediaLoadType;
 import im.zego.zegoexpress.constants.ZegoPlayerState;
 import im.zego.zegoexpress.constants.ZegoPublishChannel;
 import im.zego.zegoexpress.constants.ZegoPublisherState;
 import im.zego.zegoexpress.constants.ZegoRemoteDeviceState;
-import im.zego.zegoexpress.constants.ZegoRoomMode;
 import im.zego.zegoexpress.constants.ZegoRoomStateChangedReason;
 import im.zego.zegoexpress.constants.ZegoScenario;
 import im.zego.zegoexpress.constants.ZegoStreamEvent;
@@ -29,6 +33,7 @@ import im.zego.zegoexpress.constants.ZegoViewMode;
 import im.zego.zegoexpress.entity.ZegoCanvas;
 import im.zego.zegoexpress.entity.ZegoCustomVideoProcessConfig;
 import im.zego.zegoexpress.entity.ZegoEngineConfig;
+import im.zego.zegoexpress.entity.ZegoMediaPlayerResource;
 import im.zego.zegoexpress.entity.ZegoMixerTask;
 import im.zego.zegoexpress.entity.ZegoPlayerConfig;
 import im.zego.zegoexpress.entity.ZegoPublisherConfig;
@@ -45,6 +50,7 @@ import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.json.JSONException;
 import org.json.JSONObject;
+import timber.log.Timber;
 
 public class ExpressService {
 
@@ -59,6 +65,9 @@ public class ExpressService {
     private List<IExpressEngineEventHandler> autoDeleteHandlerList = new CopyOnWriteArrayList<>();
     private ExpressEngineProxy engineProxy = new ExpressEngineProxy();
     private IZegoEventHandler initEventHandler;
+    private ZegoMediaPlayer mediaPlayer;
+    private Map<String, String> cachedMediaResourceMap = new HashMap<>();
+    private IZegoMediaPlayerEventHandler mediaPlayerEvent;
 
     public void initSDK(Application application, long appID, String appSign, ZegoScenario scenario) {
         ZegoEngineConfig config = new ZegoEngineConfig();
@@ -73,7 +82,7 @@ public class ExpressService {
             public void onRoomStreamUpdate(String roomID, ZegoUpdateType updateType, ArrayList<ZegoStream> streamList,
                 JSONObject extendedData) {
                 super.onRoomStreamUpdate(roomID, updateType, streamList, extendedData);
-                LogUtil.d("onRoomStreamUpdate() called with: roomID = [" + roomID + "], updateType = [" + updateType
+                Timber.d("onRoomStreamUpdate() called with: roomID = [" + roomID + "], updateType = [" + updateType
                     + "], streamList = [" + streamList + "], extendedData = [" + extendedData + "]");
                 List<ZEGOSDKUser> userList = new ArrayList<>();
                 List<ZEGOSDKUser> needNotifyCameraChangeUserList = new ArrayList<>();
@@ -161,14 +170,14 @@ public class ExpressService {
             public void onPublisherStateUpdate(String streamID, ZegoPublisherState state, int errorCode,
                 JSONObject extendedData) {
                 super.onPublisherStateUpdate(streamID, state, errorCode, extendedData);
-                LogUtil.d("onPublisherStateUpdate: " + streamID + ", state:" + state + ", code:" + errorCode + ", data:"
+                Timber.d("onPublisherStateUpdate: " + streamID + ", state:" + state + ", code:" + errorCode + ", data:"
                     + extendedData);
-                ArrayList<ZegoStream> streamList = new ArrayList<>(1);
-                ZegoStream zegoStream = new ZegoStream();
-                zegoStream.user = new ZegoUser(currentUser.userID, currentUser.userName);
-                zegoStream.streamID = streamID;
-                zegoStream.extraInfo = extendedData.toString();
-                streamList.add(zegoStream);
+                //                ArrayList<ZegoStream> streamList = new ArrayList<>(1);
+                //                ZegoStream zegoStream = new ZegoStream();
+                //                zegoStream.user = new ZegoUser(currentUser.userID, currentUser.userName);
+                //                zegoStream.streamID = streamID;
+                //                zegoStream.extraInfo = extendedData.toString();
+                //                streamList.add(zegoStream);
 
                 if (state == ZegoPublisherState.PUBLISHING) {
                     currentUser.setStreamID(streamID);
@@ -184,6 +193,9 @@ public class ExpressService {
                 for (ZegoStream zegoStream : streamList) {
                     if (!TextUtils.isEmpty(zegoStream.extraInfo)) {
                         ZEGOSDKUser liveUser = getUser(zegoStream.user.userID);
+                        if (liveUser == null) {
+                            return;
+                        }
                         try {
                             JSONObject jsonObject = new JSONObject(zegoStream.extraInfo);
                             if (jsonObject.has("cam")) {
@@ -205,6 +217,8 @@ public class ExpressService {
             @Override
             public void onRoomUserUpdate(String roomID, ZegoUpdateType updateType, ArrayList<ZegoUser> userList) {
                 super.onRoomUserUpdate(roomID, updateType, userList);
+                Timber.d("onRoomUserUpdate() called with: roomID = [" + roomID + "], updateType = [" + updateType
+                    + "], userList = [" + userList + "]");
                 List<ZEGOSDKUser> liveUserList = new ArrayList<>();
                 for (ZegoUser zegoUser : userList) {
                     ZEGOSDKUser liveUser = getUser(zegoUser.userID);
@@ -272,7 +286,7 @@ public class ExpressService {
             public void onRoomStateChanged(String roomID, ZegoRoomStateChangedReason reason, int errorCode,
                 JSONObject extendedData) {
                 super.onRoomStateChanged(roomID, reason, errorCode, extendedData);
-                LogUtil.d("onRoomStateChanged() called with: roomID = [" + roomID + "], reason = [" + reason
+                Timber.d("onRoomStateChanged() called with: roomID = [" + roomID + "], reason = [" + reason
                     + "], errorCode = [" + errorCode + "], extendedData = [" + extendedData + "]");
             }
 
@@ -301,14 +315,21 @@ public class ExpressService {
             }
 
             @Override
+            public void onPlayerStreamEvent(ZegoStreamEvent eventID, String streamID, String extraInfo) {
+                super.onPlayerStreamEvent(eventID, streamID, extraInfo);
+                Timber.d("onPlayerStreamEvent() called with: eventID = [" + eventID + "], streamID = [" + streamID
+                    + "], extraInfo = [" + extraInfo + "]");
+            }
+
+            @Override
             public void onPlayerStateUpdate(String streamID, ZegoPlayerState state, int errorCode,
                 JSONObject extendedData) {
                 super.onPlayerStateUpdate(streamID, state, errorCode, extendedData);
-                LogUtil.d("onPlayerStateUpdate: " + streamID + ", state:" + state + ", code:" + errorCode + ", data:"
+                Timber.d("onPlayerStateUpdate: " + streamID + ", state:" + state + ", code:" + errorCode + ", data:"
                     + extendedData);
             }
         };
-        LogUtil.d(
+        Timber.d(
             "initSDK() called with: application = [" + application + "], appID = [" + appID + "], appSign = [" + appSign
                 + "], scenario = [" + scenario + "]");
         engineProxy.addEventHandler(initEventHandler);
@@ -423,6 +444,68 @@ public class ExpressService {
         engineProxy.stopPlayingStream(streamID);
     }
 
+    public ZegoMediaPlayer getMediaPlayer() {
+        if (mediaPlayer == null) {
+            mediaPlayer = engineProxy.createMediaPlayer();
+            mediaPlayer.setEventHandler(new IZegoMediaPlayerEventHandler() {
+                @Override
+                public void onMediaPlayerStateUpdate(ZegoMediaPlayer mediaPlayer, ZegoMediaPlayerState state,
+                    int errorCode) {
+                    super.onMediaPlayerStateUpdate(mediaPlayer, state, errorCode);
+                    if (mediaPlayerEvent != null) {
+                        mediaPlayerEvent.onMediaPlayerStateUpdate(mediaPlayer, state, errorCode);
+                    }
+                }
+
+                @Override
+                public void onMediaPlayerLocalCache(ZegoMediaPlayer mediaPlayer, int errorCode, String resource,
+                    String cachedFile) {
+                    super.onMediaPlayerLocalCache(mediaPlayer, errorCode, resource, cachedFile);
+                    if (errorCode == 0) {
+                        cachedMediaResourceMap.put(resource, cachedFile);
+                    }
+                    if (mediaPlayerEvent != null) {
+                        mediaPlayerEvent.onMediaPlayerLocalCache(mediaPlayer, errorCode, resource, cachedFile);
+                    }
+                }
+
+                @Override
+                public void onMediaPlayerNetworkEvent(ZegoMediaPlayer mediaPlayer,
+                    ZegoMediaPlayerNetworkEvent networkEvent) {
+                    super.onMediaPlayerNetworkEvent(mediaPlayer, networkEvent);
+                    if (mediaPlayerEvent != null) {
+                        mediaPlayerEvent.onMediaPlayerNetworkEvent(mediaPlayer, networkEvent);
+                    }
+                }
+            });
+        }
+        return mediaPlayer;
+    }
+
+    public void setMediaPlayerEventHandler(IZegoMediaPlayerEventHandler mediaPlayerEvent) {
+        this.mediaPlayerEvent = mediaPlayerEvent;
+    }
+
+    public void loadResourceFile(String url, IZegoMediaPlayerLoadResourceCallback callback) {
+        ZegoMediaPlayer mediaPlayer = getMediaPlayer();
+        ZegoMediaPlayerResource resource = new ZegoMediaPlayerResource();
+        resource.loadType = ZegoMultimediaLoadType.FILE_PATH;
+        if (cachedMediaResourceMap.containsKey(url)) {
+            resource.filePath = cachedMediaResourceMap.get(url);
+        } else {
+            resource.filePath = url;
+        }
+        resource.alphaLayout = ZegoAlphaLayoutType.LEFT;
+        mediaPlayer.loadResourceWithConfig(resource, new IZegoMediaPlayerLoadResourceCallback() {
+            @Override
+            public void onLoadResourceCallback(int errorCode) {
+                if (callback != null) {
+                    callback.onLoadResourceCallback(errorCode);
+                }
+            }
+        });
+    }
+
     public void loginRoom(String roomID, IZegoRoomLoginCallback callback) {
         loginRoom(roomID, "", callback);
     }
@@ -492,6 +575,7 @@ public class ExpressService {
         roomRemoteUserMap.clear();
         roomRemoteUserIDList.clear();
         currentRoomID = null;
+        mediaPlayer = null;
         stopPreview();
         useFrontCamera(true);
         openCamera(false);
@@ -518,7 +602,7 @@ public class ExpressService {
         removeUserData();
         removeUserListeners();
         // keep initEventHandler not cleared when user logout account
-        LogUtil.d("disconnectUser: ");
+        Timber.d("disconnectUser: ");
     }
 
     public ZEGOSDKUser getCurrentUser() {
@@ -570,7 +654,7 @@ public class ExpressService {
         engineProxy.setStreamExtraInfo(extraInfo, null);
     }
 
-    public void syncCameraState(String userID, boolean open) {
+    private void syncCameraState(String userID, boolean open) {
         if (!userID.equals(currentUser.userID)) {
             ZEGOSDKUser zegosdkUser = getUser(userID);
             boolean changed = zegosdkUser.isCameraOpen() != open;
@@ -635,6 +719,16 @@ public class ExpressService {
             return currentUser;
         }
         return roomRemoteUserMap.get(userID);
+    }
+
+    public List<ZEGOSDKUser> getRoomUsers() {
+        List<ZEGOSDKUser> roomUsers = new ArrayList<>();
+        roomUsers.add(currentUser);
+        for (String userID : roomRemoteUserIDList) {
+            ZEGOSDKUser zegosdkUser = roomRemoteUserMap.get(userID);
+            roomUsers.add(zegosdkUser);
+        }
+        return roomUsers;
     }
 
 

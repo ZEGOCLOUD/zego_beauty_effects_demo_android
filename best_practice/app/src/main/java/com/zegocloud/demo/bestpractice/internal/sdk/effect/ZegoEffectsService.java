@@ -7,7 +7,6 @@ import com.zegocloud.demo.bestpractice.internal.sdk.effect.bean.BeautyGroup;
 import com.zegocloud.demo.bestpractice.internal.sdk.effect.bean.BeautyType;
 import com.zegocloud.demo.bestpractice.internal.sdk.effect.net.IGetLicenseCallback;
 import com.zegocloud.demo.bestpractice.internal.sdk.effect.net.License;
-import com.zegocloud.demo.bestpractice.internal.utils.LogUtil;
 import im.zego.effects.ZegoEffects;
 import im.zego.effects.callback.ZegoEffectsEventHandler;
 import im.zego.effects.entity.ZegoEffectsFaceDetectionResult;
@@ -18,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import timber.log.Timber;
 
 public class ZegoEffectsService {
 
@@ -46,7 +46,7 @@ public class ZegoEffectsService {
         EffectSDKHelper.getLicence(context, BACKEND_API_URL, appID, appSign, new IGetLicenseCallback() {
             @Override
             public void onGetLicense(int code, String message, License license) {
-                LogUtil.d("onGetLicense() called with: code = [" + code + "], message = [" + message + "], license = ["
+                Timber.d("onGetLicense() called with: code = [" + code + "], message = [" + message + "], license = ["
                     + license + "]");
                 if (code == 0) {
                     // step 3 create effect
@@ -56,14 +56,14 @@ public class ZegoEffectsService {
                         @Override
                         public void onError(ZegoEffects effects, int errorCode, String desc) {
                             super.onError(effects, errorCode, desc);
-                            LogUtil.d("errorCode:" + errorCode);
+                            Timber.d("errorCode:" + errorCode);
                         }
 
                         @Override
                         public void onFaceDetectionResult(ZegoEffectsFaceDetectionResult[] results,
                             ZegoEffects effects) {
                             for (ZegoEffectsFaceDetectionResult result : results) {
-                                LogUtil.d("onFaceDetectionResult,results.size:" + results.length + ",rect : point("
+                                Timber.d("onFaceDetectionResult,results.size:" + results.length + ",rect : point("
                                     + result.rect.x + "," + result.rect.y + "),width:" + result.rect.width + ",height:"
                                     + result.rect.height + ",getScore: " + result.getScore());
                             }

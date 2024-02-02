@@ -10,6 +10,8 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import com.zegocloud.demo.bestpractice.internal.sdk.ZEGOSDKManager;
 import com.zegocloud.demo.bestpractice.internal.sdk.basic.ZEGOSDKUser;
 import im.zego.zegoexpress.constants.ZegoViewMode;
+import im.zego.zim.entity.ZIMUserFullInfo;
+import timber.log.Timber;
 
 public class ZEGOAudioVideoView extends ConstraintLayout {
 
@@ -51,7 +53,6 @@ public class ZEGOAudioVideoView extends ConstraintLayout {
         params.bottomToBottom = LayoutParams.PARENT_ID;
         letterIconView.setLayoutParams(params);
         addView(letterIconView, params);
-        letterIconView.setVisibility(GONE);
 
         textureView = new TextureView(getContext());
         addView(textureView);
@@ -64,11 +65,23 @@ public class ZEGOAudioVideoView extends ConstraintLayout {
 
     public void setUserID(String userID) {
         this.userID = userID;
-        ZEGOSDKUser user = ZEGOSDKManager.getInstance().expressService.getUser(userID);
-        if (user != null) {
-            letterIconView.setLetter(user.userName);
+        ZIMUserFullInfo zimUserInfo = ZEGOSDKManager.getInstance().zimService.getUserInfo(userID);
+        if (zimUserInfo != null) {
+            letterIconView.setLetter(zimUserInfo.baseInfo.userName);
         } else {
-            letterIconView.setLetter("");
+            ZEGOSDKUser user = ZEGOSDKManager.getInstance().expressService.getUser(userID);
+            if (user != null) {
+                letterIconView.setLetter(user.userName);
+            } else {
+                letterIconView.setLetter("");
+            }
+        }
+        ZIMUserFullInfo userInfo = ZEGOSDKManager.getInstance().zimService.getUserInfo(userID);
+        if (userInfo != null) {
+            Timber.d("setUserID() called with: userInfo.userAvatarUrl = [" + userInfo.userAvatarUrl + "]");
+            letterIconView.setIconUrl(userInfo.userAvatarUrl);
+        } else {
+            letterIconView.setIconUrl(null);
         }
     }
 
@@ -81,6 +94,7 @@ public class ZEGOAudioVideoView extends ConstraintLayout {
     }
 
     public void startPlayRemoteAudioVideo() {
+        Timber.d("startPlayRemoteAudioVideo() called,%s,%s,%s", userID, streamID, this);
         if (TextUtils.isEmpty(streamID)) {
             return;
         }
@@ -110,16 +124,19 @@ public class ZEGOAudioVideoView extends ConstraintLayout {
     }
 
     public void startPreviewOnly() {
+        Timber.d("startPreviewOnly() called:%s", userID);
         ZEGOSDKManager.getInstance().expressService.startPreview(textureView, ZegoViewMode.ASPECT_FILL);
+    }
+
+    public void stopPreview() {
+        ZEGOSDKManager.getInstance().expressService.stopPreview();
     }
 
     public void showVideoView() {
         textureView.setVisibility(VISIBLE);
-        letterIconView.setVisibility(GONE);
     }
 
     public void showAudioView() {
         textureView.setVisibility(GONE);
-        letterIconView.setVisibility(VISIBLE);
     }
 }

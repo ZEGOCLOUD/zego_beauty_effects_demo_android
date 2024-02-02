@@ -9,7 +9,6 @@ import com.zegocloud.demo.bestpractice.internal.sdk.effect.net.IGetLicenseCallba
 import com.zegocloud.demo.bestpractice.internal.sdk.effect.net.License;
 import com.zegocloud.demo.bestpractice.internal.sdk.express.ExpressService;
 import com.zegocloud.demo.bestpractice.internal.sdk.zim.ZIMService;
-import com.zegocloud.demo.bestpractice.internal.utils.LogUtil;
 import im.zego.effects.entity.ZegoEffectsVideoFrameParam;
 import im.zego.effects.enums.ZegoEffectsVideoFrameFormat;
 import im.zego.zegoexpress.callback.IZegoCustomVideoProcessHandler;
@@ -48,6 +47,7 @@ public class ZEGOSDKManager {
         private static final ZEGOSDKManager INSTANCE = new ZEGOSDKManager();
     }
 
+
     public static ZEGOSDKManager getInstance() {
         return Holder.INSTANCE;
     }
@@ -69,9 +69,6 @@ public class ZEGOSDKManager {
             effectsService.init(context, appID, appSign, new IGetLicenseCallback() {
                 @Override
                 public void onGetLicense(int code, String message, License license) {
-                    LogUtil.d(
-                        "onGetLicense() called with: code = [" + code + "], message = [" + message + "], license = ["
-                            + license + "]");
                     enableCustomVideoProcess(code == 0);
                 }
             });
@@ -89,7 +86,6 @@ public class ZEGOSDKManager {
             expressService.setCustomVideoProcessHandler(new IZegoCustomVideoProcessHandler() {
                 @Override
                 public void onStart(ZegoPublishChannel channel) {
-                    LogUtil.d("[Express] [onStart]");
                     effectsService.uninitEnv();
                     ZegoVideoConfig videoConfig = expressService.getVideoConfig();
                     effectsService.initEnv(videoConfig.captureWidth, videoConfig.captureHeight);
@@ -98,7 +94,6 @@ public class ZEGOSDKManager {
 
                 @Override
                 public void onStop(ZegoPublishChannel channel) {
-                    LogUtil.d("[Express] [onStop]");
                     effectsService.uninitEnv();
                 }
 
@@ -273,9 +268,5 @@ public class ZEGOSDKManager {
                 mergeCallBack.setResult2(errorInfo);
             }
         });
-    }
-
-    public void setDebugMode(boolean debugMode) {
-        LogUtil.setDebug(debugMode);
     }
 }
