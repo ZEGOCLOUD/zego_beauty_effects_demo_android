@@ -133,6 +133,10 @@ class ExpressEngineProxy {
         ZegoExpressEngine.getEngine().loginRoom(roomID, user, config, callback);
     }
 
+    public void switchRoom(String fromRoomID, String toRoomID) {
+        ZegoExpressEngine.getEngine().switchRoom(fromRoomID, toRoomID);
+    }
+
     public void logoutRoom(IZegoRoomLogoutCallback callback) {
         ZegoExpressEngine.getEngine().logoutRoom(callback);
     }
@@ -245,5 +249,9 @@ class ExpressEngineProxy {
 
     public ZegoMediaPlayer createMediaPlayer() {
         return ZegoExpressEngine.getEngine().createMediaPlayer();
+    }
+
+    public void destroyMediaPlayer(ZegoMediaPlayer mediaPlayer) {
+        ZegoExpressEngine.getEngine().destroyMediaPlayer(mediaPlayer);
     }
 }

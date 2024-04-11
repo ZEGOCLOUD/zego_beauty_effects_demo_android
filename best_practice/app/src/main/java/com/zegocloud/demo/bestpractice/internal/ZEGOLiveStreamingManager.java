@@ -19,6 +19,9 @@ import im.zego.zegoexpress.constants.ZegoPublishChannel;
 import im.zego.zegoexpress.constants.ZegoPublisherState;
 import im.zego.zegoexpress.constants.ZegoVideoBufferType;
 import im.zego.zegoexpress.entity.ZegoCustomVideoCaptureConfig;
+import im.zego.zim.callback.ZIMUsersInfoQueriedCallback;
+import im.zego.zim.entity.ZIMUserFullInfo;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +63,22 @@ public class ZEGOLiveStreamingManager {
         ZEGOSDKManager.getInstance().expressService.addEventHandler(new IExpressEngineEventHandler() {
             @Override
             public void onReceiveStreamAdd(List<ZEGOSDKUser> userList) {
+                boolean needQuery = false;
+                for (ZEGOSDKUser zegosdkUser : userList) {
+                    ZIMUserFullInfo zimUserFullInfo = ZEGOSDKManager.getInstance().zimService.getUserInfo(
+                        zegosdkUser.userID);
+                    if (zimUserFullInfo == null) {
+                        needQuery = true;
+                        break;
+                    }
+                }
+                if (needQuery) {
+                    List<String> userIDList = new ArrayList<>();
+                    for (ZEGOSDKUser user : userList) {
+                        userIDList.add(user.userID);
+                    }
+                    ZEGOLiveStreamingManager.getInstance().queryUsersInfo(userIDList, null);
+                }
                 coHostService.onReceiveStreamAdd(userList);
                 pkService.onReceiveStreamAdd(userList);
             }
@@ -223,6 +242,10 @@ public class ZEGOLiveStreamingManager {
         coHostService.removeListener(listener);
     }
 
+    public void queryUsersInfo(List<String> userIDList, ZIMUsersInfoQueriedCallback callback) {
+        ZEGOSDKManager.getInstance().zimService.queryUsersInfo(userIDList, callback);
+    }
+
     public void invitePKBattle(String anotherHostID, UserRequestCallback callback) {
         pkService.invitePKBattle(Collections.singletonList(anotherHostID), false, callback);
     }
@@ -295,11 +318,12 @@ public class ZEGOLiveStreamingManager {
     }
 
     public void leave() {
-        if (ZEGOLiveStreamingManager.getInstance().isCurrentUserHost()) {
-            ZEGOLiveStreamingManager.getInstance().quitPKBattle();
+        if (isCurrentUserHost()) {
+            quitPKBattle();
         }
-        ZEGOLiveStreamingManager.getInstance().removeRoomData();
-        ZEGOLiveStreamingManager.getInstance().removeRoomListeners();
+        removeRoomData();
+        removeRoomListeners();
+        ZEGOSDKManager.getInstance().expressService.setMediaPlayerEventHandler(null);
         ZEGOSDKManager.getInstance().logoutRoom(null);
     }
 

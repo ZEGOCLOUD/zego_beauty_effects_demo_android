@@ -1,4 +1,4 @@
-package com.zegocloud.demo.bestpractice.activity;
+package com.zegocloud.demo.bestpractice.activity.call;
 
 import android.Manifest.permission;
 import android.content.Intent;
