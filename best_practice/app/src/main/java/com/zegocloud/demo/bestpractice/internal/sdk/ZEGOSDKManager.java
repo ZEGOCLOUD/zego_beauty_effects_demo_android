@@ -28,6 +28,7 @@ import im.zego.zim.entity.ZIMError;
 import im.zego.zim.entity.ZIMRoomFullInfo;
 import im.zego.zim.enums.ZIMErrorCode;
 import org.json.JSONObject;
+import timber.log.Timber;
 
 public class ZEGOSDKManager {
 
@@ -157,6 +158,9 @@ public class ZEGOSDKManager {
     }
 
     public void loginRoom(String roomID, ZegoScenario scenario, ZEGOSDKCallBack callback) {
+        Timber.d(
+            "loginRoom() called with: roomID = [" + roomID + "], scenario = [" + scenario + "], callback = [" + callback
+                + "]");
         zimService.loginRoom(roomID, new ZIMRoomEnteredCallback() {
             @Override
             public void onRoomEntered(ZIMRoomFullInfo roomInfo, ZIMError errorInfo) {
@@ -175,6 +179,37 @@ public class ZEGOSDKManager {
                         callback.onResult(errorInfo.code.value(), "zim error:" + errorInfo.message);
                     }
                 }
+            }
+        });
+    }
+
+    private void loginRoom(String roomID, ZEGOSDKCallBack callback) {
+        zimService.loginRoom(roomID, new ZIMRoomEnteredCallback() {
+            @Override
+            public void onRoomEntered(ZIMRoomFullInfo roomInfo, ZIMError errorInfo) {
+                if (errorInfo.code == ZIMErrorCode.SUCCESS) {
+                    expressService.loginRoom(roomID, new IZegoRoomLoginCallback() {
+                        @Override
+                        public void onRoomLoginResult(int errorCode, JSONObject extendedData) {
+                            if (callback != null) {
+                                callback.onResult(errorCode, "express error:" + extendedData.toString());
+                            }
+                        }
+                    });
+                } else {
+                    if (callback != null) {
+                        callback.onResult(errorInfo.code.value(), "zim error:" + errorInfo.message);
+                    }
+                }
+            }
+        });
+    }
+
+    public void switchRoom(String fromRoomID, String toRoomID, ZEGOSDKCallBack callback) {
+        logoutRoom(new ZEGOSDKCallBack() {
+            @Override
+            public void onResult(int errorCode, String message) {
+                loginRoom(toRoomID, callback);
             }
         });
     }
@@ -203,6 +238,7 @@ public class ZEGOSDKManager {
     }
 
     public void logoutRoom(ZEGOSDKCallBack callBack) {
+        Timber.d("logoutRoom() called with: callBack = [" + callBack + "]");
         MergeCallBack<Integer, ZIMError> mergeCallBack = new MergeCallBack<Integer, ZIMError>() {
             @Override
             public void onResult(Integer integer, ZIMError zimError) {
@@ -223,12 +259,16 @@ public class ZEGOSDKManager {
         expressService.logoutRoom(new IZegoRoomLogoutCallback() {
             @Override
             public void onRoomLogoutResult(int errorCode, JSONObject extendedData) {
+                Timber.d(
+                    "onRoomLogoutResult() called with: errorCode = [" + errorCode + "], extendedData = [" + extendedData
+                        + "]");
                 mergeCallBack.setResult1(errorCode);
             }
         });
         zimService.logoutRoom(new ZIMRoomLeftCallback() {
             @Override
             public void onRoomLeft(String roomID, ZIMError errorInfo) {
+                Timber.d("onRoomLeft() called with: roomID = [" + roomID + "], errorInfo = [" + errorInfo + "]");
                 mergeCallBack.setResult2(errorInfo);
             }
         });
