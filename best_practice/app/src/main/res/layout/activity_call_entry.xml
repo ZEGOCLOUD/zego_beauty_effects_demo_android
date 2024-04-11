@@ -4,14 +4,14 @@
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  tools:context=".activity.LoginActivity">
+  tools:context=".activity.call.CallEntryActivity">
 
   <TextView
-    android:id="@+id/live_login_app_name"
+    android:id="@+id/title"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginTop="100dp"
-    android:text="@string/app_name"
+    android:layout_marginTop="96dp"
+    android:text="Call"
     android:textSize="28dp"
     android:textStyle="bold"
     app:layout_constraintEnd_toEndOf="parent"
@@ -19,16 +19,16 @@
     app:layout_constraintTop_toTopOf="parent" />
 
   <com.google.android.material.textfield.TextInputLayout
-    android:id="@+id/live_login_userid"
+    android:id="@+id/call_user_id"
     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
     android:layout_width="275dp"
     android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal"
-    android:layout_marginTop="100dp"
-    android:hint="UserID:"
+    android:layout_marginTop="196dp"
+    android:hint="Call User ID"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@id/live_login_app_name">
+    app:layout_constraintTop_toTopOf="parent">
 
     <com.google.android.material.textfield.TextInputEditText
       android:layout_width="match_parent"
@@ -36,39 +36,71 @@
       android:ellipsize="middle"
       android:paddingStart="16dp"
       android:paddingEnd="16dp"
-      android:singleLine="true" />
-  </com.google.android.material.textfield.TextInputLayout>
-
-  <com.google.android.material.textfield.TextInputLayout
-    android:id="@+id/live_login_name"
-    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-    android:layout_width="275dp"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginTop="12dp"
-    android:hint="UserName:"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@id/live_login_userid">
-
-    <com.google.android.material.textfield.TextInputEditText
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:ellipsize="middle"
-      android:paddingStart="16dp"
-      android:paddingEnd="16dp"
-      android:singleLine="true" />
+      android:singleLine="true"
+      android:text="" />
 
   </com.google.android.material.textfield.TextInputLayout>
 
-
-  <com.google.android.material.button.MaterialButton
-    android:id="@+id/live_login_btn"
+  <Button
+    android:id="@+id/call_user_video"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginTop="24dp"
-    android:text="Login"
+    android:layout_gravity="center_horizontal"
+    android:layout_marginTop="8dp"
+    android:text="Video Call"
+
+    app:layout_constraintEnd_toStartOf="@+id/call_user_audio"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/call_user_id" />
+
+  <Button
+    android:id="@+id/call_user_audio"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:layout_marginTop="8dp"
+    android:text="Audio Call"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toEndOf="@+id/call_user_video"
+    app:layout_constraintTop_toBottomOf="@+id/call_user_id" />
+
+  <View
+    android:layout_width="match_parent"
+    android:layout_height="1dp"
+    android:layout_marginTop="48dp"
+    android:background="#dddddd"
+    app:layout_constraintTop_toBottomOf="@+id/call_user_audio" />
+
+  <com.google.android.material.textfield.TextInputLayout
+    android:id="@+id/call_room_id"
+    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    android:layout_width="275dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:layout_marginTop="96dp"
+    android:hint="Join by Call ID"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@id/live_login_name" />
+    app:layout_constraintTop_toBottomOf="@+id/call_user_audio">
+
+    <com.google.android.material.textfield.TextInputEditText
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:ellipsize="middle"
+      android:paddingStart="16dp"
+      android:paddingEnd="16dp"
+      android:singleLine="true"
+      android:text="" />
+
+  </com.google.android.material.textfield.TextInputLayout>
+
+  <com.google.android.material.button.MaterialButton
+    android:id="@+id/call_room_button"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:text="Join Room"
+    app:layout_constraintEnd_toEndOf="@+id/call_room_id"
+    app:layout_constraintStart_toStartOf="@+id/call_room_id"
+    app:layout_constraintTop_toBottomOf="@+id/call_room_id" />
 </androidx.constraintlayout.widget.ConstraintLayout>
